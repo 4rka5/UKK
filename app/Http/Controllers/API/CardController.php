@@ -11,38 +11,59 @@ class CardController extends Controller
 {
     public function index(Request $request, $boardId)
     {
+        $user = $request->user();
         $query = ManagementProjectCard::where('board_id', $boardId)
-            ->with(['assignees', 'subtasks', 'board.project']);
+            ->with(['assignedTo', 'creator', 'subtasks', 'board.project']);
+
+        // ROLE-BASED FILTERING
+        // Member (designer/developer) hanya bisa lihat task yang di-assign ke mereka
+        if (in_array($user->role, ['designer', 'developer'])) {
+            $query->where('assigned_to', $user->id);
+        }
+        // Team lead/admin bisa lihat semua task
 
         // Filter by status
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
 
-        // Filter by assigned user
-        if ($request->has('assigned_to_me') && $request->assigned_to_me) {
-            $query->whereHas('assignees', function($q) use ($request) {
-                $q->where('user_id', $request->user()->id);
-            });
+        // Filter by priority
+        if ($request->has('priority')) {
+            $query->where('priority', $request->priority);
         }
 
         $cards = $query->get();
 
         return response()->json([
             'success' => true,
-            'data' => $cards
+            'data' => $cards,
+            'meta' => [
+                'total' => $cards->count(),
+                'role' => $user->role
+            ]
         ]);
     }
 
     public function store(Request $request, $boardId)
     {
+        $user = $request->user();
+
+        // Only team lead and admin can create tasks
+        if (!in_array($user->role, ['team_lead', 'admin'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only team lead can create tasks'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'card_title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'due_date' => 'nullable|date',
             'priority' => 'nullable|in:low,medium,high',
             'status' => 'nullable|in:backlog,todo,in_progress,code_review,testing,done',
-            'estimated_hours' => 'nullable|numeric'
+            'estimated_hours' => 'nullable|numeric',
+            'assigned_to' => 'nullable|exists:users,id' // ID member yang akan dikerjakan
         ]);
 
         if ($validator->fails()) {
@@ -59,20 +80,16 @@ class CardController extends Controller
             'description' => $request->description,
             'due_date' => $request->due_date,
             'priority' => $request->priority ?? 'medium',
-            'status' => $request->status ?? 'backlog',
+            'status' => $request->status ?? 'todo',
             'estimated_hours' => $request->estimated_hours,
-            'created_by' => $request->user()->id
+            'created_by' => $user->id,
+            'assigned_to' => $request->assigned_to // Assign ke member
         ]);
-
-        // Assign users if provided
-        if ($request->has('assignees')) {
-            $card->assignees()->attach($request->assignees);
-        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Card created successfully',
-            'data' => $card->load(['assignees', 'subtasks'])
+            'message' => 'Task created and assigned successfully',
+            'data' => $card->load(['assignedTo', 'creator', 'subtasks'])
         ], 201);
     }
 
@@ -90,40 +107,65 @@ class CardController extends Controller
 
     public function update(Request $request, $boardId, $id)
     {
+        $user = $request->user();
         $card = ManagementProjectCard::where('board_id', $boardId)->findOrFail($id);
 
-        $validator = Validator::make($request->all(), [
-            'card_title' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'due_date' => 'nullable|date',
-            'priority' => 'nullable|in:low,medium,high',
-            'status' => 'nullable|in:backlog,todo,in_progress,code_review,testing,done',
-            'estimated_hours' => 'nullable|numeric',
-            'actual_hours' => 'nullable|numeric'
-        ]);
+        // Member hanya bisa update status task mereka sendiri
+        if (in_array($user->role, ['designer', 'developer'])) {
+            if ($card->assigned_to !== $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You can only update your own assigned tasks'
+                ], 403);
+            }
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
-        }
+            // Member hanya bisa update status dan actual_hours
+            $validator = Validator::make($request->all(), [
+                'status' => 'nullable|in:todo,in_progress,done',
+                'actual_hours' => 'nullable|numeric'
+            ]);
 
-        $card->update($request->only([
-            'card_title', 'description', 'due_date', 'priority', 
-            'status', 'estimated_hours', 'actual_hours'
-        ]));
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
 
-        // Update assignees if provided
-        if ($request->has('assignees')) {
-            $card->assignees()->sync($request->assignees);
+            $card->update($request->only(['status', 'actual_hours']));
+
+        } else {
+            // Team lead bisa update semua field
+            $validator = Validator::make($request->all(), [
+                'card_title' => 'sometimes|string|max:255',
+                'description' => 'nullable|string',
+                'due_date' => 'nullable|date',
+                'priority' => 'nullable|in:low,medium,high',
+                'status' => 'nullable|in:backlog,todo,in_progress,code_review,testing,done',
+                'estimated_hours' => 'nullable|numeric',
+                'actual_hours' => 'nullable|numeric',
+                'assigned_to' => 'nullable|exists:users,id'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $card->update($request->only([
+                'card_title', 'description', 'due_date', 'priority',
+                'status', 'estimated_hours', 'actual_hours', 'assigned_to'
+            ]));
         }
 
         return response()->json([
             'success' => true,
             'message' => 'Card updated successfully',
-            'data' => $card->load(['assignees', 'subtasks'])
+            'data' => $card->load(['assignedTo', 'creator', 'subtasks'])
         ]);
     }
 
@@ -141,7 +183,7 @@ class CardController extends Controller
     public function assignUser(Request $request, $cardId)
     {
         $card = ManagementProjectCard::findOrFail($cardId);
-        
+
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id'
         ]);
@@ -179,10 +221,21 @@ class CardController extends Controller
 
     public function updateStatus(Request $request, $cardId)
     {
+        $user = $request->user();
         $card = ManagementProjectCard::findOrFail($cardId);
-        
+
+        // Member hanya bisa update status task mereka sendiri
+        if (in_array($user->role, ['designer', 'developer'])) {
+            if ($card->assigned_to !== $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You can only update your own assigned tasks'
+                ], 403);
+            }
+        }
+
         $validator = Validator::make($request->all(), [
-            'status' => 'required|in:backlog,todo,in_progress,code_review,testing,done'
+            'status' => 'required|in:todo,in_progress,done'
         ]);
 
         if ($validator->fails()) {
@@ -197,8 +250,68 @@ class CardController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Card status updated successfully',
+            'message' => 'Task status updated successfully',
+            'data' => $card->load(['assignedTo', 'creator'])
+        ]);
+    }
+
+    // Get single card without board_id (untuk Flutter)
+    public function showCard(Request $request, $cardId)
+    {
+        $user = $request->user();
+        $card = ManagementProjectCard::with([
+            'board.project',
+            'assignedTo',
+            'creator',
+            'subtasks',
+            'comments.user'
+        ])->findOrFail($cardId);
+
+        // Member hanya bisa lihat task mereka sendiri
+        if (in_array($user->role, ['designer', 'developer'])) {
+            if ($card->assigned_to !== $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You can only view your own assigned tasks'
+                ], 403);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
             'data' => $card
+        ]);
+    }
+
+    // Get my assigned tasks (untuk member)
+    public function myTasks(Request $request)
+    {
+        $user = $request->user();
+
+        $query = ManagementProjectCard::where('assigned_to', $user->id)
+            ->with(['board.project', 'creator', 'subtasks']);
+
+        // Filter by status
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by priority
+        if ($request->has('priority')) {
+            $query->where('priority', $request->priority);
+        }
+
+        $cards = $query->orderBy('due_date', 'asc')->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $cards,
+            'meta' => [
+                'total' => $cards->count(),
+                'todo' => $cards->where('status', 'todo')->count(),
+                'in_progress' => $cards->where('status', 'in_progress')->count(),
+                'done' => $cards->where('status', 'done')->count()
+            ]
         ]);
     }
 }

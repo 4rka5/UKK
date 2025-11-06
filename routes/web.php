@@ -39,3 +39,4 @@ Route::middleware(['auth','role:designer,developer,team_lead,admin'])->prefix('m
 });
 
 Route::get('/', fn() => redirect('/login'));
+

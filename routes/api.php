@@ -32,11 +32,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/boards/{board}/cards/{card}', [CardController::class, 'show']);
     Route::put('/boards/{board}/cards/{card}', [CardController::class, 'update']);
     Route::delete('/boards/{board}/cards/{card}', [CardController::class, 'destroy']);
-    
+
     // Card Actions
     Route::post('/cards/{card}/assign', [CardController::class, 'assignUser']);
     Route::delete('/cards/{card}/unassign/{user}', [CardController::class, 'unassignUser']);
     Route::put('/cards/{card}/status', [CardController::class, 'updateStatus']);
+
+    // Get single card (without board_id) - untuk Flutter
+    Route::get('/cards/{card}', [CardController::class, 'showCard']);
+
+    // Get my assigned tasks (untuk member)
+    Route::get('/my-tasks', [CardController::class, 'myTasks']);
+
+    // Subtasks - Update untuk bisa akses langsung
+    Route::put('/subtasks/{subtask}', [SubtaskController::class, 'updateSubtask']);
 
     // Subtasks (nested under cards)
     Route::get('/cards/{card}/subtasks', [SubtaskController::class, 'index']);
@@ -53,61 +62,46 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/cards/{card}/comments/{comment}', [CommentsController::class, 'destroy']);
 
     // Dashboard Stats
-    Route::get('/dashboard/stats', function (Request $request) {
+    Route::get('/dashboard', function (Request $request) {
         $user = $request->user();
         $stats = [];
 
         if ($user->role === 'admin') {
+            // Admin: statistik project yang dia buat
             $stats = [
-                'total_users' => \App\Models\User::count(),
-                'total_projects' => \App\Models\Project::count(),
-                'total_boards' => \App\Models\ManagementProjectBoard::count(),
-                'total_cards' => \App\Models\ManagementProjectCard::count(),
+                'total_projects' => \App\Models\Project::where('created_by', $user->id)->count(),
+                'assigned_projects' => \App\Models\Project::where('created_by', $user->id)->whereNotNull('assigned_to')->count(),
+                'unassigned_projects' => \App\Models\Project::where('created_by', $user->id)->whereNull('assigned_to')->count(),
+                'total_team_leads' => \App\Models\User::where('role', 'team_lead')->count(),
             ];
         } elseif ($user->role === 'team_lead') {
+            // Team Lead: statistik project yang di-assign ke mereka
+            $assignedProjects = \App\Models\Project::where('assigned_to', $user->id)->pluck('id');
+
             $stats = [
-                'my_projects' => \App\Models\Project::where('created_by', $user->id)->count(),
-                'my_boards' => \App\Models\ManagementProjectBoard::whereHas('project', function($q) use ($user) {
-                    $q->where('created_by', $user->id);
+                'assigned_projects' => $assignedProjects->count(),
+                'total_boards' => \App\Models\ManagementProjectBoard::whereIn('project_id', $assignedProjects)->count(),
+                'total_cards' => \App\Models\ManagementProjectCard::whereHas('board', function($q) use ($assignedProjects) {
+                    $q->whereIn('project_id', $assignedProjects);
                 })->count(),
-                'total_cards' => \App\Models\ManagementProjectCard::whereHas('board.project', function($q) use ($user) {
-                    $q->where('created_by', $user->id);
-                })->count(),
-                'cards_by_status' => \App\Models\ManagementProjectCard::whereHas('board.project', function($q) use ($user) {
-                    $q->where('created_by', $user->id);
-                })->selectRaw('status, count(*) as count')->groupBy('status')->get()
+                'assigned_cards' => \App\Models\ManagementProjectCard::whereHas('board', function($q) use ($assignedProjects) {
+                    $q->whereIn('project_id', $assignedProjects);
+                })->whereNotNull('assigned_to')->count(),
             ];
         } else {
+            // Member (designer/developer) - tampilkan task yang di-assign ke mereka
             $stats = [
-                'assigned_cards' => \App\Models\ManagementProjectCard::whereHas('assignees', function($q) use ($user) {
-                    $q->where('user_id', $user->id);
-                })->count(),
-                'cards_by_status' => \App\Models\ManagementProjectCard::whereHas('assignees', function($q) use ($user) {
-                    $q->where('user_id', $user->id);
-                })->selectRaw('status, count(*) as count')->groupBy('status')->get(),
-                'cards_by_priority' => \App\Models\ManagementProjectCard::whereHas('assignees', function($q) use ($user) {
-                    $q->where('user_id', $user->id);
-                })->selectRaw('priority, count(*) as count')->groupBy('priority')->get()
+                'assigned_tasks' => \App\Models\ManagementProjectCard::where('assigned_to', $user->id)->count(),
+                'todo' => \App\Models\ManagementProjectCard::where('assigned_to', $user->id)->where('status', 'todo')->count(),
+                'in_progress' => \App\Models\ManagementProjectCard::where('assigned_to', $user->id)->where('status', 'in_progress')->count(),
+                'done' => \App\Models\ManagementProjectCard::where('assigned_to', $user->id)->where('status', 'done')->count(),
+                'high_priority' => \App\Models\ManagementProjectCard::where('assigned_to', $user->id)->where('priority', 'high')->count(),
             ];
         }
 
         return response()->json([
             'success' => true,
             'data' => $stats
-        ]);
-    });
-
-    // My Assigned Cards (for members)
-    Route::get('/my-cards', function (Request $request) {
-        $user = $request->user();
-        
-        $cards = \App\Models\ManagementProjectCard::whereHas('assignees', function($q) use ($user) {
-            $q->where('user_id', $user->id);
-        })->with(['board.project', 'assignees', 'subtasks'])->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $cards
         ]);
     });
 });

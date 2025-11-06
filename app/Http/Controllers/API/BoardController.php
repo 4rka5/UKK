@@ -24,6 +24,17 @@ class BoardController extends Controller
 
     public function store(Request $request, $projectId)
     {
+        $user = $request->user();
+        $project = Project::findOrFail($projectId);
+
+        // Only team lead assigned to this project can create boards
+        if ($user->role !== 'team_lead' || $project->assigned_to !== $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only team lead assigned to this project can create boards'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'board_name' => 'required|string|max:255',
             'description' => 'nullable|string'
@@ -64,7 +75,17 @@ class BoardController extends Controller
 
     public function update(Request $request, $projectId, $id)
     {
+        $user = $request->user();
+        $project = Project::findOrFail($projectId);
         $board = ManagementProjectBoard::where('project_id', $projectId)->findOrFail($id);
+
+        // Only team lead assigned to this project can update boards
+        if ($user->role !== 'team_lead' || $project->assigned_to !== $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only team lead assigned to this project can update boards'
+            ], 403);
+        }
 
         $validator = Validator::make($request->all(), [
             'board_name' => 'sometimes|string|max:255',
@@ -88,9 +109,20 @@ class BoardController extends Controller
         ]);
     }
 
-    public function destroy($projectId, $id)
+    public function destroy(Request $request, $projectId, $id)
     {
+        $user = $request->user();
+        $project = Project::findOrFail($projectId);
         $board = ManagementProjectBoard::where('project_id', $projectId)->findOrFail($id);
+
+        // Only team lead assigned to this project can delete boards
+        if ($user->role !== 'team_lead' || $project->assigned_to !== $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only team lead assigned to this project can delete boards'
+            ], 403);
+        }
+
         $board->delete();
 
         return response()->json([

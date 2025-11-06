@@ -67,7 +67,7 @@ class AuthController extends Controller
 
         // Support login with email or username
         $loginType = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-        
+
         if (!Auth::attempt([$loginType => $request->login, 'password' => $request->password])) {
             return response()->json([
                 'success' => false,
@@ -91,7 +91,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Logged out successfully'
@@ -109,7 +109,7 @@ class AuthController extends Controller
     public function updateProfile(Request $request)
     {
         $user = $request->user();
-        
+
         $validator = Validator::make($request->all(), [
             'fullname' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,' . $user->id,

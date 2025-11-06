@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Tester - Project Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .response {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .success {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .error {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+        .token-display {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-todo { background: #ffc107; color: #000; }
+        .status-in_progress { background: #007bff; color: white; }
+        .status-done { background: #28a745; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 API Testing Dashboard</h1>
+
+        <!-- Login Section -->
+        <div class="card">
+            <h2>🔐 Login / Register</h2>
+            <div class="form-group">
+                <label>Username:</label>
+                <input type="text" id="username" value="desainer" placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="password" value="password" placeholder="Enter password">
+            </div>
+            <div class="form-group">
+                <label>Full Name (for register):</label>
+                <input type="text" id="fullname" value="New User" placeholder="Enter full name">
+            </div>
+            <div class="form-group">
+                <label>Role (for register):</label>
+                <select id="role">
+                    <option value="developer">Developer</option>
+                    <option value="designer">Designer</option>
+                </select>
+            </div>
+            <button onclick="login()">Login</button>
+            <button onclick="register()">Register</button>
+            <button onclick="logout()">Logout</button>
+
+            <div id="token-display" class="token-display" style="display:none;">
+                <strong>Token:</strong> <span id="token-value"></span>
+            </div>
+
+            <div id="login-response" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- User Info Section -->
+        <div class="card">
+            <h2>👤 Get User Info</h2>
+            <button onclick="getUserInfo()">Get My Info</button>
+            <div id="user-response" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Dashboard Stats -->
+        <div class="card">
+            <h2>📊 Dashboard Statistics</h2>
+            <button onclick="getDashboard()">Get Dashboard Stats</button>
+            <div id="dashboard-response" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Tasks Section -->
+        <div class="card">
+            <h2>📋 My Tasks</h2>
+            <div class="form-group">
+                <label>Filter by Status:</label>
+                <select id="filter-status">
+                    <option value="">All</option>
+                    <option value="todo">To Do</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="done">Done</option>
+                </select>
+            </div>
+            <button onclick="getMyTasks()">Get My Tasks</button>
+            <div id="tasks-response" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Task Detail -->
+        <div class="card">
+            <h2>🔍 Task Detail</h2>
+            <div class="form-group">
+                <label>Task ID:</label>
+                <input type="text" id="task-id" placeholder="Enter task ID">
+            </div>
+            <button onclick="getTaskDetail()">Get Task Detail</button>
+            <div id="task-detail-response" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Update Task Status -->
+        <div class="card">
+            <h2>✏️ Update Task Status</h2>
+            <div class="form-group">
+                <label>Task ID:</label>
+                <input type="text" id="update-task-id" placeholder="Enter task ID">
+            </div>
+            <div class="form-group">
+                <label>New Status:</label>
+                <select id="new-status">
+                    <option value="todo">To Do</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="done">Done</option>
+                </select>
+            </div>
+            <button onclick="updateTaskStatus()">Update Status</button>
+            <div id="update-response" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Add Comment -->
+        <div class="card">
+            <h2>💬 Add Comment</h2>
+            <div class="form-group">
+                <label>Task ID:</label>
+                <input type="text" id="comment-task-id" placeholder="Enter task ID">
+            </div>
+            <div class="form-group">
+                <label>Comment:</label>
+                <input type="text" id="comment-text" placeholder="Enter your comment">
+            </div>
+            <button onclick="addComment()">Add Comment</button>
+            <div id="comment-response" class="response" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8001/api';
+        let authToken = localStorage.getItem('auth_token') || '';
+
+        // Update token display on load
+        if (authToken) {
+            document.getElementById('token-display').style.display = 'block';
+            document.getElementById('token-value').textContent = authToken;
+        }
+
+        async function apiCall(endpoint, method = 'GET', body = null, requiresAuth = false) {
+            const headers = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            };
+
+            if (requiresAuth && authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            const options = {
+                method,
+                headers,
+            };
+
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                const data = await response.json();
+
+                return {
+                    status: response.status,
+                    ok: response.ok,
+                    data
+                };
+            } catch (error) {
+                return {
+                    status: 0,
+                    ok: false,
+                    data: { error: error.message }
+                };
+            }
+        }
+
+        function displayResponse(elementId, response) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = 'response ' + (response.ok ? 'success' : 'error');
+            element.innerHTML = `
+                <strong>Status:</strong> ${response.status}<br>
+                <strong>Response:</strong><br>
+                <pre>${JSON.stringify(response.data, null, 2)}</pre>
+            `;
+        }
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const response = await apiCall('/login', 'POST', {
+                login: username,
+                password: password
+            });
+
+            if (response.ok && response.data.data && response.data.data.token) {
+                authToken = response.data.data.token;
+                localStorage.setItem('auth_token', authToken);
+                document.getElementById('token-display').style.display = 'block';
+                document.getElementById('token-value').textContent = authToken;
+            }
+
+            displayResponse('login-response', response);
+        }
+
+        async function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const fullname = document.getElementById('fullname').value;
+            const role = document.getElementById('role').value;
+
+            const response = await apiCall('/register', 'POST', {
+                username: username,
+                password: password,
+                password_confirmation: password,
+                nama_lengkap: fullname,
+                role: role
+            });
+
+            if (response.ok && response.data.data && response.data.data.token) {
+                authToken = response.data.data.token;
+                localStorage.setItem('auth_token', authToken);
+                document.getElementById('token-display').style.display = 'block';
+                document.getElementById('token-value').textContent = authToken;
+            }
+
+            displayResponse('login-response', response);
+        }
+
+        async function logout() {
+            const response = await apiCall('/logout', 'POST', null, true);
+
+            authToken = '';
+            localStorage.removeItem('auth_token');
+            document.getElementById('token-display').style.display = 'none';
+            document.getElementById('token-value').textContent = '';
+
+            displayResponse('login-response', response);
+        }
+
+        async function getUserInfo() {
+            const response = await apiCall('/user', 'GET', null, true);
+            displayResponse('user-response', response);
+        }
+
+        async function getDashboard() {
+            const response = await apiCall('/dashboard', 'GET', null, true);
+            displayResponse('dashboard-response', response);
+        }
+
+        async function getMyTasks() {
+            const status = document.getElementById('filter-status').value;
+            const endpoint = status ? `/cards?status=${status}` : '/cards';
+
+            const response = await apiCall(endpoint, 'GET', null, true);
+            displayResponse('tasks-response', response);
+        }
+
+        async function getTaskDetail() {
+            const taskId = document.getElementById('task-id').value;
+            if (!taskId) {
+                alert('Please enter a task ID');
+                return;
+            }
+
+            const response = await apiCall(`/cards/${taskId}`, 'GET', null, true);
+            displayResponse('task-detail-response', response);
+        }
+
+        async function updateTaskStatus() {
+            const taskId = document.getElementById('update-task-id').value;
+            const status = document.getElementById('new-status').value;
+
+            if (!taskId) {
+                alert('Please enter a task ID');
+                return;
+            }
+
+            const response = await apiCall(`/cards/${taskId}/status`, 'PUT', {
+                status: status
+            }, true);
+
+            displayResponse('update-response', response);
+        }
+
+        async function addComment() {
+            const taskId = document.getElementById('comment-task-id').value;
+            const comment = document.getElementById('comment-text').value;
+
+            if (!taskId || !comment) {
+                alert('Please enter task ID and comment');
+                return;
+            }
+
+            const response = await apiCall(`/cards/${taskId}/comments`, 'POST', {
+                comment: comment
+            }, true);
+
+            displayResponse('comment-response', response);
+        }
+    </script>
+</body>
+</html>

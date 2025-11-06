@@ -101,4 +101,30 @@ class SubtaskController extends Controller
             'message' => 'Subtask deleted successfully'
         ]);
     }
+
+    // Update subtask directly by ID (untuk Flutter)
+    public function updateSubtask(Request $request, $id)
+    {
+        $subtask = ManagementProjectSubtask::findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|in:todo,in_progress,done'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $subtask->update(['status' => $request->status]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Subtask updated successfully',
+            'data' => $subtask
+        ]);
+    }
 }
