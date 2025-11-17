@@ -266,19 +266,143 @@ class ProjectDataSeeder extends Seeder
             'estimated_hours' => 3,
         ]);
 
+        // Subtasks for card2 (Design Homepage)
+        ManagementProjectSubtask::create([
+            'card_id' => $card2->id,
+            'subtask_title' => 'Create wireframe',
+            'description' => 'Design homepage wireframe mockup',
+            'status' => 'todo',
+            'estimated_hours' => 2,
+        ]);
+
+        ManagementProjectSubtask::create([
+            'card_id' => $card2->id,
+            'subtask_title' => 'Design hero section',
+            'description' => 'Create hero banner with CTA',
+            'status' => 'todo',
+            'estimated_hours' => 2,
+        ]);
+
+        ManagementProjectSubtask::create([
+            'card_id' => $card2->id,
+            'subtask_title' => 'Design product showcase',
+            'description' => 'Create featured products section',
+            'status' => 'todo',
+            'estimated_hours' => 2,
+        ]);
+
+        // Subtasks for card4 (Product Card Component)
+        ManagementProjectSubtask::create([
+            'card_id' => $card4->id,
+            'subtask_title' => 'Design card layout',
+            'description' => 'Create product card UI design',
+            'status' => 'done',
+            'estimated_hours' => 1,
+        ]);
+
+        ManagementProjectSubtask::create([
+            'card_id' => $card4->id,
+            'subtask_title' => 'Add responsive behavior',
+            'description' => 'Make card responsive for mobile/tablet',
+            'status' => 'in_progress',
+            'estimated_hours' => 2,
+        ]);
+
+        ManagementProjectSubtask::create([
+            'card_id' => $card4->id,
+            'subtask_title' => 'Add hover effects',
+            'description' => 'Implement interactive hover animations',
+            'status' => 'todo',
+            'estimated_hours' => 1,
+        ]);
+
+        // Subtasks for card7 (Shopping Cart)
+        ManagementProjectSubtask::create([
+            'card_id' => $card7->id,
+            'subtask_title' => 'Create cart model and migration',
+            'description' => 'Setup cart database schema',
+            'status' => 'todo',
+            'estimated_hours' => 2,
+        ]);
+
+        ManagementProjectSubtask::create([
+            'card_id' => $card7->id,
+            'subtask_title' => 'Implement add to cart',
+            'description' => 'Create functionality to add items to cart',
+            'status' => 'todo',
+            'estimated_hours' => 3,
+        ]);
+
+        ManagementProjectSubtask::create([
+            'card_id' => $card7->id,
+            'subtask_title' => 'Implement update quantity',
+            'description' => 'Allow users to change item quantities',
+            'status' => 'todo',
+            'estimated_hours' => 2,
+        ]);
+
+        ManagementProjectSubtask::create([
+            'card_id' => $card7->id,
+            'subtask_title' => 'Implement remove from cart',
+            'description' => 'Allow users to delete items from cart',
+            'status' => 'todo',
+            'estimated_hours' => 2,
+        ]);
+
+        ManagementProjectSubtask::create([
+            'card_id' => $card7->id,
+            'subtask_title' => 'Calculate total price',
+            'description' => 'Implement cart total calculation logic',
+            'status' => 'todo',
+            'estimated_hours' => 1,
+        ]);
+
+        // Subtasks for card8 (Payment Gateway)
+        ManagementProjectSubtask::create([
+            'card_id' => $card8->id,
+            'subtask_title' => 'Research payment providers',
+            'description' => 'Compare Midtrans, Xendit, and other options',
+            'status' => 'todo',
+            'estimated_hours' => 2,
+        ]);
+
+        ManagementProjectSubtask::create([
+            'card_id' => $card8->id,
+            'subtask_title' => 'Setup payment API credentials',
+            'description' => 'Register and configure payment gateway',
+            'status' => 'todo',
+            'estimated_hours' => 1,
+        ]);
+
+        ManagementProjectSubtask::create([
+            'card_id' => $card8->id,
+            'subtask_title' => 'Implement payment integration',
+            'description' => 'Integrate payment gateway SDK',
+            'status' => 'todo',
+            'estimated_hours' => 4,
+        ]);
+
+        ManagementProjectSubtask::create([
+            'card_id' => $card8->id,
+            'subtask_title' => 'Handle payment callbacks',
+            'description' => 'Process success/failed payment notifications',
+            'status' => 'todo',
+            'estimated_hours' => 1,
+        ]);
+
         $this->command->info('✓ Project data seeded successfully!');
         $this->command->info("  Project: {$project->project_name}");
         $this->command->info("  Members: 3 (Team Lead, Developer, Designer)");
         $this->command->info("  Cards: 8 (4 Todo/Unassigned, 2 In Progress/Assigned, 1 Done, 1 Todo)");
         $this->command->info("  - Card 1 (Setup Database): UNASSIGNED - waiting for developer");
-        $this->command->info("  - Card 2 (Design Homepage): UNASSIGNED - waiting for designer");
-        $this->command->info("  - Card 3 (Product API): ASSIGNED to Developer (In Progress)");
-        $this->command->info("  - Card 4 (Product Component): ASSIGNED to Designer (In Progress)");
-        $this->command->info("  - Card 5 (User Auth): UNASSIGNED - available");
+        $this->command->info("  - Card 2 (Design Homepage): UNASSIGNED - waiting for designer (3 subtasks)");
+        $this->command->info("  - Card 3 (Product API): ASSIGNED to Developer (In Progress, 4 subtasks)");
+        $this->command->info("  - Card 4 (Product Component): ASSIGNED to Designer (In Progress, 3 subtasks)");
+        $this->command->info("  - Card 5 (User Auth): UNASSIGNED - available (3 subtasks)");
         $this->command->info("  - Card 6 (Project Setup): ASSIGNED to Developer (Done)");
-        $this->command->info("  - Card 7 (Shopping Cart): UNASSIGNED - available");
-        $this->command->info("  - Card 8 (Payment Gateway): UNASSIGNED - available");
+        $this->command->info("  - Card 7 (Shopping Cart): UNASSIGNED - available (5 subtasks)");
+        $this->command->info("  - Card 8 (Payment Gateway): UNASSIGNED - available (4 subtasks)");
         $this->command->info("  Assignments: 3 (1 developer active, 1 designer active, 1 completed)");
-        $this->command->info("  Subtasks: 10");
+        $this->command->info("  Subtasks: 25 total");
     }
 }

@@ -319,4 +319,90 @@ class CardController extends Controller
         
         return redirect()->back()->with('status', 'Komentar berhasil ditambahkan.');
     }
+
+    public function addSubtask(Request $request, ManagementProjectCard $card)
+    {
+        // Check if user is assigned to this card
+        $userId = Auth::id();
+        $isAssigned = $card->assignees()->where('users.id', $userId)->exists();
+        
+        if (!$isAssigned) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses ke card ini.'
+            ], 403);
+        }
+        
+        $request->validate([
+            'subtask_title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'estimated_hours' => 'nullable|numeric|min:0',
+        ]);
+        
+        $subtask = \App\Models\ManagementProjectSubtask::create([
+            'card_id' => $card->id,
+            'subtask_title' => $request->subtask_title,
+            'description' => $request->description ?? '',
+            'status' => 'todo',
+            'estimated_hours' => $request->estimated_hours ?? 0,
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Subtask berhasil ditambahkan.',
+            'subtask' => $subtask
+        ]);
+    }
+
+    public function updateSubtask(Request $request, $subtaskId)
+    {
+        $subtask = \App\Models\ManagementProjectSubtask::findOrFail($subtaskId);
+        $card = $subtask->card;
+        
+        // Check if user is assigned to this card
+        $userId = Auth::id();
+        $isAssigned = $card->assignees()->where('users.id', $userId)->exists();
+        
+        if (!$isAssigned) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses ke card ini.'
+            ], 403);
+        }
+        
+        $request->validate([
+            'status' => 'required|in:todo,in_progress,done'
+        ]);
+        
+        $subtask->update(['status' => $request->status]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Status subtask berhasil diupdate.'
+        ]);
+    }
+
+    public function deleteSubtask($subtaskId)
+    {
+        $subtask = \App\Models\ManagementProjectSubtask::findOrFail($subtaskId);
+        $card = $subtask->card;
+        
+        // Check if user is assigned to this card
+        $userId = Auth::id();
+        $isAssigned = $card->assignees()->where('users.id', $userId)->exists();
+        
+        if (!$isAssigned) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses ke card ini.'
+            ], 403);
+        }
+        
+        $subtask->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Subtask berhasil dihapus.'
+        ]);
+    }
 }

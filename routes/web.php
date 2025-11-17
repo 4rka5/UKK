@@ -95,6 +95,11 @@ Route::middleware(['auth','role:designer,developer,team_lead,admin'])->prefix('m
     
     // Comments
     Route::post('/cards/{card}/comment', [MemberCardController::class, 'addComment'])->name('cards.comment');
+    
+    // Subtasks - member can add, update, and delete subtasks
+    Route::post('/cards/{card}/subtask', [MemberCardController::class, 'addSubtask'])->name('cards.subtask.add');
+    Route::patch('/subtasks/{subtask}', [MemberCardController::class, 'updateSubtask'])->name('subtasks.update');
+    Route::delete('/subtasks/{subtask}', [MemberCardController::class, 'deleteSubtask'])->name('subtasks.delete');
 });
 
 // Notification routes (available for all authenticated users)

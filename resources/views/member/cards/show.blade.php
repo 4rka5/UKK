@@ -645,27 +645,76 @@ window.addEventListener('beforeunload', function() {
   </div>
 </div>
 
-<!-- Subtasks Section (jika ada) -->
-@if($card->subtasks && $card->subtasks->count() > 0)
+<!-- Subtasks Section -->
 <div class="detail-card">
-  <h5 class="mb-3">✓ Subtasks ({{ $card->subtasks->count() }})</h5>
-  <ul class="list-group">
-    @foreach($card->subtasks as $subtask)
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-          <strong>{{ $subtask->subtask_title }}</strong>
-          @if($subtask->description)
-            <p class="text-muted small mb-0">{{ $subtask->description }}</p>
-          @endif
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">✓ Subtasks ({{ $card->subtasks->count() }})</h5>
+    <button type="button" class="btn btn-sm btn-primary" onclick="showAddSubtaskForm()">
+      <i class="bi bi-plus-circle"></i> Tambah Subtask
+    </button>
+  </div>
+
+  <!-- Add Subtask Form (hidden by default) -->
+  <div id="addSubtaskForm" class="border rounded p-3 bg-light mb-3" style="display: none;">
+    <form onsubmit="addSubtask(event)">
+      <div class="mb-2">
+        <label class="form-label small fw-semibold">Judul Subtask <span class="text-danger">*</span></label>
+        <input type="text" name="subtask_title" class="form-control form-control-sm" placeholder="Contoh: Create login form" required>
+      </div>
+      <div class="mb-2">
+        <label class="form-label small fw-semibold">Deskripsi</label>
+        <textarea name="description" class="form-control form-control-sm" rows="2" placeholder="Deskripsi subtask (opsional)"></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Estimasi Jam</label>
+        <input type="number" name="estimated_hours" class="form-control form-control-sm" step="0.5" min="0" placeholder="Contoh: 2.5">
+      </div>
+      <div class="d-flex gap-2 justify-content-end">
+        <button type="button" class="btn btn-sm btn-secondary" onclick="hideAddSubtaskForm()">Batal</button>
+        <button type="submit" class="btn btn-sm btn-primary">
+          <i class="bi bi-check-circle"></i> Tambah
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Subtasks List -->
+  @if($card->subtasks && $card->subtasks->count() > 0)
+    <div class="list-group">
+      @foreach($card->subtasks as $subtask)
+        <div class="list-group-item" id="subtask{{ $subtask->id }}">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <select class="form-select form-select-sm" style="width: auto;" onchange="updateSubtaskStatus({{ $subtask->id }}, this.value)">
+                  <option value="todo" {{ $subtask->status === 'todo' ? 'selected' : '' }}>📋 Todo</option>
+                  <option value="in_progress" {{ $subtask->status === 'in_progress' ? 'selected' : '' }}>🔄 In Progress</option>
+                  <option value="done" {{ $subtask->status === 'done' ? 'selected' : '' }}>✅ Done</option>
+                </select>
+                <strong class="{{ $subtask->status === 'done' ? 'text-decoration-line-through text-muted' : '' }}">
+                  {{ $subtask->subtask_title }}
+                </strong>
+              </div>
+              @if($subtask->description)
+                <small class="text-muted d-block">{{ $subtask->description }}</small>
+              @endif
+              @if($subtask->estimated_hours)
+                <small class="text-muted">⏱️ {{ $subtask->estimated_hours }} jam</small>
+              @endif
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteSubtask({{ $subtask->id }})" title="Hapus subtask">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
         </div>
-        <span class="badge bg-{{ $subtask->status === 'completed' ? 'success' : 'secondary' }}">
-          {{ ucfirst($subtask->status) }}
-        </span>
-      </li>
-    @endforeach
-  </ul>
+      @endforeach
+    </div>
+  @else
+    <div class="alert alert-light">
+      <small class="text-muted">Belum ada subtask. Klik tombol "Tambah Subtask" untuk menambahkan.</small>
+    </div>
+  @endif
 </div>
-@endif
 
 <!-- Extension Request Modal -->
 <div class="modal fade" id="extensionModal" tabindex="-1" aria-labelledby="extensionModalLabel" aria-hidden="true">
@@ -697,5 +746,142 @@ window.addEventListener('beforeunload', function() {
     </div>
   </div>
 </div>
+
+<script>
+// Subtask Management Functions
+
+function showAddSubtaskForm() {
+  document.getElementById('addSubtaskForm').style.display = 'block';
+}
+
+function hideAddSubtaskForm() {
+  const form = document.getElementById('addSubtaskForm');
+  form.style.display = 'none';
+  form.querySelector('form').reset();
+}
+
+function addSubtask(event) {
+  event.preventDefault();
+  
+  const form = event.target;
+  const formData = new FormData(form);
+  
+  const data = {
+    subtask_title: formData.get('subtask_title'),
+    description: formData.get('description'),
+    estimated_hours: formData.get('estimated_hours') || null
+  };
+  
+  fetch('{{ route("member.cards.subtask.add", $card->id) }}', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': '{{ csrf_token() }}',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Reload page to show new subtask
+      location.reload();
+    } else {
+      alert('Gagal menambahkan subtask: ' + (data.message || 'Unknown error'));
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Terjadi kesalahan saat menambahkan subtask');
+  });
+}
+
+function updateSubtaskStatus(subtaskId, newStatus) {
+  const previousValue = event.target.dataset.previousValue || event.target.value;
+  
+  fetch('{{ url("/member/subtasks") }}/' + subtaskId, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': '{{ csrf_token() }}',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify({ status: newStatus })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Update the dropdown's previous value
+      event.target.dataset.previousValue = newStatus;
+      
+      // Update the visual state of the subtask title
+      const subtaskItem = document.getElementById('subtask' + subtaskId);
+      const titleElement = subtaskItem.querySelector('strong');
+      
+      if (newStatus === 'done') {
+        titleElement.classList.add('text-decoration-line-through', 'text-muted');
+      } else {
+        titleElement.classList.remove('text-decoration-line-through', 'text-muted');
+      }
+      
+      // Show success notification
+      showNotification('Status subtask berhasil diubah', 'success');
+    } else {
+      // Revert dropdown to previous value on error
+      event.target.value = previousValue;
+      alert('Gagal mengubah status: ' + (data.message || 'Unknown error'));
+    }
+  })
+  .catch(error => {
+    // Revert dropdown to previous value on error
+    event.target.value = previousValue;
+    console.error('Error:', error);
+    alert('Terjadi kesalahan saat mengubah status subtask');
+  });
+}
+
+function deleteSubtask(subtaskId) {
+  if (!confirm('Apakah Anda yakin ingin menghapus subtask ini?')) {
+    return;
+  }
+  
+  fetch('{{ url("/member/subtasks") }}/' + subtaskId, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': '{{ csrf_token() }}',
+      'Accept': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Reload page to remove deleted subtask
+      location.reload();
+    } else {
+      alert('Gagal menghapus subtask: ' + (data.message || 'Unknown error'));
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Terjadi kesalahan saat menghapus subtask');
+  });
+}
+
+function showNotification(message, type) {
+  // Simple notification (could be enhanced with toast library)
+  const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+  const notification = document.createElement('div');
+  notification.className = `alert ${alertClass} position-fixed top-0 end-0 m-3`;
+  notification.style.zIndex = '9999';
+  notification.textContent = message;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.remove();
+  }, 3000);
+}
+</script>
 
 @endsection
