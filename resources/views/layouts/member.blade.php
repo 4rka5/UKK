@@ -13,6 +13,9 @@
           <a href="{{ route('member.dashboard') }}" class="list-group-item list-group-item-action {{ request()->is('member') && !request()->is('member/*') ? 'active' : '' }}">
             📋 Dashboard
           </a>
+          <a href="{{ route('member.subtasks.index') }}" class="list-group-item list-group-item-action {{ request()->is('member/subtasks*') ? 'active' : '' }}">
+            ✓ Kelola Subtask
+          </a>
         </div>
       </div>
       <div class="card shadow-sm mt-3">

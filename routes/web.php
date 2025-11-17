@@ -82,6 +82,9 @@ Route::middleware(['auth','role:designer'])->prefix('designer')->name('designer.
 Route::middleware(['auth','role:designer,developer,team_lead,admin'])->prefix('member')->name('member.')->group(function () {
     Route::get('/', [MemberDashboardController::class, 'index'])->name('dashboard');
     Route::get('/cards/{card}', [MemberCardController::class, 'show'])->name('cards.show');
+    
+    // Subtasks index - view all my subtasks
+    Route::get('/subtasks', [MemberCardController::class, 'subtasksIndex'])->name('subtasks.index');
     // Route update status dihapus - member tidak bisa ubah status card
     
     // Timer routes

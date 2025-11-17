@@ -9,6 +9,40 @@ use Illuminate\Support\Facades\Auth;
 
 class CardController extends Controller
 {
+    /**
+     * Halaman index untuk melihat semua subtasks member
+     */
+    public function subtasksIndex()
+    {
+        $userId = Auth::id();
+        
+        // Get all cards assigned to this user
+        $cards = ManagementProjectCard::whereHas('assignees', function($query) use ($userId) {
+            $query->where('users.id', $userId);
+        })->with(['subtasks' => function($query) {
+            $query->orderBy('created_at', 'desc');
+        }, 'project'])->get();
+        
+        // Collect all subtasks grouped by status
+        $subtasksByStatus = [
+            'todo' => [],
+            'in_progress' => [],
+            'done' => []
+        ];
+        
+        $totalSubtasks = 0;
+        
+        foreach ($cards as $card) {
+            foreach ($card->subtasks as $subtask) {
+                $subtask->card = $card; // Attach card info to subtask
+                $subtasksByStatus[$subtask->status][] = $subtask;
+                $totalSubtasks++;
+            }
+        }
+        
+        return view('member.subtasks.index', compact('subtasksByStatus', 'totalSubtasks', 'cards'));
+    }
+
     public function show(ManagementProjectCard $card)
     {
         // Check if user is assigned to this card
