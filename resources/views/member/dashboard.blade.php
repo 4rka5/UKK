@@ -169,7 +169,9 @@
                 @endif
               @else
                 <a href="{{ route('member.cards.show', $task) }}" class="btn btn-sm btn-primary">
-                  @if(auth()->user()->role === 'developer')
+                  @if(in_array($task->status, ['review', 'done']))
+                    👁️ Cek Detail
+                  @elseif(auth()->user()->role === 'developer')
                     🛠️ Kerjakan
                   @elseif(auth()->user()->role === 'designer')
                     🎨 Design
