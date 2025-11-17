@@ -487,6 +487,8 @@ window.addEventListener('beforeunload', function() {
 
     </div>
   </div>
+@endif
+
 @if(!in_array($card->status, ['review', 'done']) && auth()->user()->role === 'designer')
   <!-- Designer Actions - Unified Form -->
   <div class="detail-card">
