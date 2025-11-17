@@ -111,6 +111,15 @@ class NotificationController extends Controller
             ->where('is_read', false)
             ->update(['is_read' => true]);
         
+        // Check if request expects JSON (AJAX from dropdown)
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Semua notifikasi telah ditandai sebagai dibaca'
+            ]);
+        }
+        
+        // Regular form submission (from notification index page)
         return redirect()->back()->with('status', 'Semua notifikasi telah ditandai sebagai dibaca');
     }
 

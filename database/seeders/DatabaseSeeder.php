@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         // Create Admin user
         User::firstOrCreate(
-            ['email' => 'admin@example.com'],
+            ['email' => 'admin@gmail.com'],
             [
                 'username' => 'admin',
                 'fullname' => 'Administrator',
@@ -28,7 +28,7 @@ class DatabaseSeeder extends Seeder
 
         // Create Team Lead user
         User::firstOrCreate(
-            ['email' => 'lead@example.com'],
+            ['email' => 'lead@gmail.com'],
             [
                 'username' => 'teamlead',
                 'fullname' => 'Team Lead',
@@ -40,7 +40,7 @@ class DatabaseSeeder extends Seeder
 
         // Create Developer user
         User::firstOrCreate(
-            ['email' => 'dev@example.com'],
+            ['email' => 'dev@gmail.com'],
             [
                 'username' => 'developer',
                 'fullname' => 'Developer',
@@ -52,7 +52,7 @@ class DatabaseSeeder extends Seeder
 
         // Create Designer user
         User::firstOrCreate(
-            ['email' => 'des@example.com'],
+            ['email' => 'des@gmail.com'],
             [
                 'username' => 'designer',
                 'fullname' => 'Designer',

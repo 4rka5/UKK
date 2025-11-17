@@ -69,12 +69,9 @@
         <div class="dropdown-header d-flex justify-content-between align-items-center py-3 px-3">
             <span class="fw-bold">🔔 Notifikasi</span>
             <div class="d-flex gap-2">
-                <form action="{{ route('notifications.readAll') }}" method="POST" style="display: inline;">
-                    @csrf
-                    <button type="submit" class="btn btn-link btn-sm text-decoration-none p-0" title="Tandai semua sudah dibaca">
-                        <i class="bi bi-check-all"></i>
-                    </button>
-                </form>
+                <button type="button" class="btn btn-link btn-sm text-decoration-none p-0" onclick="markAllAsRead()" title="Tandai semua sudah dibaca">
+                    <i class="bi bi-check-all"></i>
+                </button>
                 <a href="{{ route('notifications.index') }}" class="btn btn-link btn-sm text-decoration-none p-0" title="Lihat semua">
                     <i class="bi bi-box-arrow-up-right"></i>
                 </a>
@@ -406,6 +403,7 @@ function markAllAsRead() {
             const badge = document.getElementById('notif-badge');
             if (badge) {
                 badge.style.display = 'none';
+            }
         }
     })
     .catch(error => console.error('Error marking all as read:', error));
