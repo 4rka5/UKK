@@ -166,6 +166,17 @@
             </button>
           @endif
         </div>
+      @elseif(in_array($card->status, ['review', 'done']))
+        <div class="alert alert-info">
+          <h6>ℹ️ Task Sedang {{ $card->status === 'review' ? 'Review' : 'Selesai' }}</h6>
+          <p class="mb-0">
+            @if($card->status === 'review')
+              Tugas ini sedang dalam proses review oleh Team Lead. Anda tidak dapat melanjutkan pekerjaan sampai mendapat feedback.
+            @else
+              Tugas ini sudah selesai dan disetujui oleh Team Lead.
+            @endif
+          </p>
+        </div>
       @elseif($extensionApproved)
         <div class="alert alert-success mb-3">
           <small>✅ Perpanjangan deadline Anda telah disetujui. Silakan lanjutkan pekerjaan.</small>

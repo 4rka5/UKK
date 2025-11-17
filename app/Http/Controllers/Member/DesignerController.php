@@ -113,6 +113,12 @@ class DesignerController extends Controller
 
         // Update status ke 'review' (untuk design review)
         $card->update(['status' => 'review']);
+        
+        // Update assignment status user menjadi 'completed' dan stop timer
+        $card->assignees()->updateExistingPivot($userId, [
+            'assignment_status' => 'completed',
+            'is_working' => false
+        ]);
 
         // Tambahkan comment
         \App\Models\ManagementProjectComment::create([

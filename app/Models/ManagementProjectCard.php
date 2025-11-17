@@ -70,6 +70,11 @@ class ManagementProjectCard extends Model
      */
     public function canUserWork($userId)
     {
+        // Tidak bisa bekerja jika card sudah review atau done
+        if (in_array($this->status, ['review', 'done'])) {
+            return false;
+        }
+        
         if (!$this->isOverdue()) {
             return true;
         }

@@ -88,6 +88,12 @@ class DeveloperController extends Controller
 
         // Update status ke 'review' otomatis ketika developer submit progress
         $card->update(['status' => 'review']);
+        
+        // Update assignment status user menjadi 'completed' dan stop timer
+        $card->assignees()->updateExistingPivot($userId, [
+            'assignment_status' => 'completed',
+            'is_working' => false
+        ]);
 
         // Kirim notifikasi ke Team Lead
         $teamLead = $card->project->owner;
