@@ -183,30 +183,32 @@
         </div>
       @endif
       
-      <div class="d-grid gap-2">
-        @if(!$isWorking)
-          <form method="POST" action="{{ route('member.cards.timer.start', $card) }}">
+      @if(!in_array($card->status, ['review', 'done']))
+        <div class="d-grid gap-2">
+          @if(!$isWorking)
+            <form method="POST" action="{{ route('member.cards.timer.start', $card) }}">
+              @csrf
+              <button type="submit" class="btn btn-success btn-lg w-100" {{ !$canWork ? 'disabled' : '' }}>
+                ▶️ Mulai Kerjakan
+              </button>
+            </form>
+          @else
+            <form method="POST" action="{{ route('member.cards.timer.pause', $card) }}">
+              @csrf
+              <button type="submit" class="btn btn-warning btn-lg w-100">
+                ⏸️ Pause
+              </button>
+            </form>
+          @endif
+          
+          <form method="POST" action="{{ route('member.cards.timer.stop', $card) }}" onsubmit="return confirm('Yakin ingin menyelesaikan pekerjaan? Timer akan direset dan waktu akan dicatat.')">
             @csrf
-            <button type="submit" class="btn btn-success btn-lg w-100" {{ !$canWork ? 'disabled' : '' }}>
-              ▶️ Mulai Kerjakan
+            <button type="submit" class="btn btn-danger btn-lg w-100" {{ !$totalSeconds && !$isWorking ? 'disabled' : '' }}>
+              ⏹️ Selesai & Catat Waktu
             </button>
           </form>
-        @else
-          <form method="POST" action="{{ route('member.cards.timer.pause', $card) }}">
-            @csrf
-            <button type="submit" class="btn btn-warning btn-lg w-100">
-              ⏸️ Pause
-            </button>
-          </form>
-        @endif
-        
-        <form method="POST" action="{{ route('member.cards.timer.stop', $card) }}" onsubmit="return confirm('Yakin ingin menyelesaikan pekerjaan? Timer akan direset dan waktu akan dicatat.')">
-          @csrf
-          <button type="submit" class="btn btn-danger btn-lg w-100" {{ !$totalSeconds && !$isWorking ? 'disabled' : '' }}>
-            ⏹️ Selesai & Catat Waktu
-          </button>
-        </form>
-      </div>
+        </div>
+      @endif
       
       <div class="mt-3">
         <small class="text-muted">
@@ -353,7 +355,7 @@ window.addEventListener('beforeunload', function() {
 @endif
 
 <!-- Role-Specific Actions -->
-@if($card->status !== 'done' && auth()->user()->role === 'developer')
+@if(!in_array($card->status, ['review', 'done']) && auth()->user()->role === 'developer')
   <!-- Developer Actions - Unified Form -->
   <div class="detail-card">
     <h5 class="mb-3">💻 Developer Actions</h5>
@@ -485,7 +487,7 @@ window.addEventListener('beforeunload', function() {
 
     </div>
   </div>
-@elseif($card->status !== 'done' && auth()->user()->role === 'designer')
+@if(!in_array($card->status, ['review', 'done']) && auth()->user()->role === 'designer')
   <!-- Designer Actions - Unified Form -->
   <div class="detail-card">
     <h5 class="mb-3">🎨 Designer Actions</h5>
