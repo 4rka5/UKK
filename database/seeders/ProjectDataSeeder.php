@@ -185,61 +185,81 @@ class ProjectDataSeeder extends Seeder
         ManagementProjectSubtask::create([
             'card_id' => $card1->id,
             'subtask_title' => 'Create users table migration',
-            'is_completed' => true,
+            'description' => 'Design and implement users table schema',
+            'status' => 'done',
+            'estimated_hours' => 2,
         ]);
 
         ManagementProjectSubtask::create([
             'card_id' => $card1->id,
             'subtask_title' => 'Create products table migration',
-            'is_completed' => false,
+            'description' => 'Design and implement products table schema',
+            'status' => 'todo',
+            'estimated_hours' => 3,
         ]);
 
         ManagementProjectSubtask::create([
             'card_id' => $card1->id,
             'subtask_title' => 'Create categories table migration',
-            'is_completed' => false,
+            'description' => 'Design and implement categories table schema',
+            'status' => 'todo',
+            'estimated_hours' => 3,
         ]);
 
         ManagementProjectSubtask::create([
             'card_id' => $card3->id,
             'subtask_title' => 'Setup API routes',
-            'is_completed' => true,
+            'description' => 'Define REST API endpoints',
+            'status' => 'done',
+            'estimated_hours' => 2,
         ]);
 
         ManagementProjectSubtask::create([
             'card_id' => $card3->id,
             'subtask_title' => 'Create Product controller',
-            'is_completed' => true,
+            'description' => 'Implement product controller methods',
+            'status' => 'done',
+            'estimated_hours' => 4,
         ]);
 
         ManagementProjectSubtask::create([
             'card_id' => $card3->id,
             'subtask_title' => 'Implement filtering logic',
-            'is_completed' => false,
+            'description' => 'Add product filtering by category, price, etc',
+            'status' => 'in_progress',
+            'estimated_hours' => 3,
         ]);
 
         ManagementProjectSubtask::create([
             'card_id' => $card3->id,
             'subtask_title' => 'Add pagination',
-            'is_completed' => false,
+            'description' => 'Implement pagination for product list',
+            'status' => 'todo',
+            'estimated_hours' => 3,
         ]);
 
         ManagementProjectSubtask::create([
             'card_id' => $card5->id,
             'subtask_title' => 'Create login form',
-            'is_completed' => true,
+            'description' => 'Design and implement login UI',
+            'status' => 'done',
+            'estimated_hours' => 2,
         ]);
 
         ManagementProjectSubtask::create([
             'card_id' => $card5->id,
             'subtask_title' => 'Create register form',
-            'is_completed' => true,
+            'description' => 'Design and implement register UI',
+            'status' => 'done',
+            'estimated_hours' => 3,
         ]);
 
         ManagementProjectSubtask::create([
             'card_id' => $card5->id,
             'subtask_title' => 'Implement password reset',
-            'is_completed' => true,
+            'description' => 'Add forgot password functionality',
+            'status' => 'done',
+            'estimated_hours' => 3,
         ]);
 
         $this->command->info('✓ Project data seeded successfully!');
