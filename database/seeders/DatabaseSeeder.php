@@ -53,5 +53,10 @@ class DatabaseSeeder extends Seeder
             'role' => 'designer',
             'status' => 'active',
         ]);
+
+        // Seed project data with boards, cards, assignments
+        $this->call([
+            ProjectDataSeeder::class,
+        ]);
     }
 }

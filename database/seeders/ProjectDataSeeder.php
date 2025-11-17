@@ -6,7 +6,6 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Project;
 use App\Models\ProjectMember;
-use App\Models\ManagementProjectBoard;
 use App\Models\ManagementProjectCard;
 use App\Models\ManagementProjectSubtask;
 use App\Models\ManagementProjectCardAssignment;
@@ -22,7 +21,7 @@ class ProjectDataSeeder extends Seeder
         $designer = User::where('role', 'designer')->first();
 
         if (!$leader || !$developer || !$designer) {
-            $this->command->error('Users not found! Please run AdminUserSeeder first.');
+            $this->command->error('Users not found! Please run user seeder first.');
             return;
         }
 
@@ -37,6 +36,13 @@ class ProjectDataSeeder extends Seeder
         // Add Project Members
         ProjectMember::create([
             'project_id' => $project->id,
+            'user_id' => $leader->id,
+            'role' => 'team_lead',
+            'joined_at' => now()->subDays(10),
+        ]);
+
+        ProjectMember::create([
+            'project_id' => $project->id,
             'user_id' => $developer->id,
             'role' => 'developer',
             'joined_at' => now()->subDays(9),
@@ -49,34 +55,9 @@ class ProjectDataSeeder extends Seeder
             'joined_at' => now()->subDays(9),
         ]);
 
-        // Create Boards
-        $todoBoard = ManagementProjectBoard::create([
-            'project_id' => $project->id,
-            'board_name' => 'To Do',
-            'description' => 'Tugas yang belum dikerjakan',
-        ]);
-
-        $inProgressBoard = ManagementProjectBoard::create([
-            'project_id' => $project->id,
-            'board_name' => 'In Progress',
-            'description' => 'Tugas yang sedang dikerjakan',
-        ]);
-
-        $reviewBoard = ManagementProjectBoard::create([
-            'project_id' => $project->id,
-            'board_name' => 'Review',
-            'description' => 'Tugas yang sedang direview',
-        ]);
-
-        $doneBoard = ManagementProjectBoard::create([
-            'project_id' => $project->id,
-            'board_name' => 'Done',
-            'description' => 'Tugas yang sudah selesai',
-        ]);
-
-        // Create Cards for To Do Board
+        // Create Cards (now directly linked to project, no boards)
         $card1 = ManagementProjectCard::create([
-            'board_id' => $todoBoard->id,
+            'project_id' => $project->id,
             'card_title' => 'Setup Database Schema',
             'description' => 'Membuat schema database untuk produk, kategori, dan user',
             'priority' => 'high',
@@ -88,7 +69,7 @@ class ProjectDataSeeder extends Seeder
         ]);
 
         $card2 = ManagementProjectCard::create([
-            'board_id' => $todoBoard->id,
+            'project_id' => $project->id,
             'card_title' => 'Design Homepage Layout',
             'description' => 'Membuat design mockup untuk halaman utama website',
             'priority' => 'high',
@@ -99,9 +80,8 @@ class ProjectDataSeeder extends Seeder
             'actual_hours' => 0,
         ]);
 
-        // Create Cards for In Progress Board
         $card3 = ManagementProjectCard::create([
-            'board_id' => $inProgressBoard->id,
+            'project_id' => $project->id,
             'card_title' => 'Implement Product Catalog API',
             'description' => 'Membuat REST API untuk menampilkan katalog produk dengan filtering dan pagination',
             'priority' => 'high',
@@ -113,7 +93,7 @@ class ProjectDataSeeder extends Seeder
         ]);
 
         $card4 = ManagementProjectCard::create([
-            'board_id' => $inProgressBoard->id,
+            'project_id' => $project->id,
             'card_title' => 'Create Product Card Component',
             'description' => 'Design komponen kartu produk yang responsive',
             'priority' => 'medium',
@@ -124,9 +104,8 @@ class ProjectDataSeeder extends Seeder
             'actual_hours' => 1,
         ]);
 
-        // Create Cards for Review Board
         $card5 = ManagementProjectCard::create([
-            'board_id' => $reviewBoard->id,
+            'project_id' => $project->id,
             'card_title' => 'User Authentication Module',
             'description' => 'Implementasi login, register, dan forgot password',
             'priority' => 'high',
@@ -137,9 +116,8 @@ class ProjectDataSeeder extends Seeder
             'actual_hours' => 4,
         ]);
 
-        // Create Cards for Done Board
         $card6 = ManagementProjectCard::create([
-            'board_id' => $doneBoard->id,
+            'project_id' => $project->id,
             'card_title' => 'Project Setup & Configuration',
             'description' => 'Setup Laravel project, install dependencies, konfigurasi environment',
             'priority' => 'high',
@@ -264,10 +242,10 @@ class ProjectDataSeeder extends Seeder
             'is_completed' => true,
         ]);
 
-        $this->command->info('Project data seeded successfully!');
-        $this->command->info("Project: {$project->project_name}");
-        $this->command->info("Boards: 4 (To Do, In Progress, Review, Done)");
-        $this->command->info("Cards: 6");
-        $this->command->info("Subtasks: 10");
+        $this->command->info('✓ Project data seeded successfully!');
+        $this->command->info("  Project: {$project->project_name}");
+        $this->command->info("  Members: 3 (Team Lead, Developer, Designer)");
+        $this->command->info("  Cards: 6 (2 Todo, 2 In Progress, 1 Review, 1 Done)");
+        $this->command->info("  Subtasks: 10");
     }
 }
