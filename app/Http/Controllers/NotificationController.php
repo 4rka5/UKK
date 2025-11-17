@@ -69,6 +69,38 @@ class NotificationController extends Controller
             'Content-Type' => 'application/json'
         ]);
     }
+    
+    /**
+     * Show notification detail and redirect to related page
+     */
+    public function show($id)
+    {
+        $notification = Notification::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+            
+        // Mark as read
+        $notification->markAsRead();
+        
+        // Redirect based on notification type and related resource
+        if ($notification->related_type === 'Card' && $notification->related_id) {
+            return redirect()->route('member.cards.show', $notification->related_id);
+        } elseif ($notification->related_type === 'Project' && $notification->related_id) {
+            // Redirect to project page based on user role
+            $user = Auth::user();
+            if ($user->role === 'admin') {
+                return redirect()->route('admin.projects.edit', $notification->related_id);
+            } elseif ($user->role === 'team_lead') {
+                return redirect()->route('lead.dashboard');
+            } else {
+                return redirect()->route('member.dashboard');
+            }
+        }
+        
+        // Default: redirect to notifications index
+        return redirect()->route('notifications.index')
+            ->with('status', 'Notifikasi tidak memiliki detail terkait');
+    }
 
     /**
      * Mark all notifications as read

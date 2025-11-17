@@ -110,6 +110,7 @@ Route::middleware(['auth'])->prefix('notifications')->name('notifications.')->gr
     Route::get('/', [NotificationController::class, 'index'])->name('index');
     Route::get('/count', [NotificationController::class, 'getUnreadCount'])->name('count');
     Route::get('/recent', [NotificationController::class, 'getRecent'])->name('recent');
+    Route::get('/{id}', [NotificationController::class, 'show'])->name('show');
     Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
     Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('readAll');
     Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');

@@ -380,20 +380,8 @@ function escapeHtml(text) {
 }
 
 function markAsRead(id) {
-    fetch(`/notifications/${id}/read`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            loadNotifications();
-        }
-    })
-    .catch(error => console.error('Error marking notification as read:', error));
+    // Redirect to notification detail page (will mark as read and redirect to related content)
+    window.location.href = `/notifications/${id}`;
 }
 
 function markAllAsRead() {
