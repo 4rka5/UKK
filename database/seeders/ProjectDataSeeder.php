@@ -132,14 +132,14 @@ class ProjectDataSeeder extends Seeder
         ManagementProjectCardAssignment::create([
             'card_id' => $card1->id,
             'user_id' => $developer->id,
-            'assignment_status' => 'pending',
+            'assignment_status' => 'assigned',
             'assigned_at' => now(),
         ]);
 
         ManagementProjectCardAssignment::create([
             'card_id' => $card2->id,
             'user_id' => $designer->id,
-            'assignment_status' => 'pending',
+            'assignment_status' => 'assigned',
             'assigned_at' => now(),
         ]);
 
@@ -166,7 +166,7 @@ class ProjectDataSeeder extends Seeder
         ManagementProjectCardAssignment::create([
             'card_id' => $card5->id,
             'user_id' => $developer->id,
-            'assignment_status' => 'review',
+            'assignment_status' => 'in_progress',
             'assigned_at' => now()->subDays(3),
             'total_work_seconds' => 14400, // 4 hours
             'is_working' => false,
