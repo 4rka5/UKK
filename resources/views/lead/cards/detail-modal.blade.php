@@ -176,11 +176,13 @@
             </div>
             <div class="comment-text">{{ $comment->comment_text }}</div>
             @if($comment->attachment)
-              <div class="mt-2">
-                <a href="{{ asset('storage/' . $comment->attachment) }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                  <i class="bi bi-paperclip"></i> View Attachment
+              <div class="mt-2 p-2 bg-white border rounded">
+                <a href="{{ asset('storage/' . $comment->attachment) }}" target="_blank" class="btn btn-sm btn-primary">
+                  <i class="bi bi-paperclip"></i> 📎 View Attachment
                 </a>
-                <small class="text-muted ms-2">{{ basename($comment->attachment) }}</small>
+                <small class="text-muted ms-2 d-block d-sm-inline mt-2 mt-sm-0">
+                  <i class="bi bi-file-earmark"></i> {{ basename($comment->attachment) }}
+                </small>
               </div>
             @endif
           </div>
