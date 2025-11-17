@@ -619,6 +619,14 @@ window.addEventListener('beforeunload', function() {
             <small class="text-muted">{{ $comment->created_at->diffForHumans() }}</small>
           </div>
           <p class="mb-0">{{ $comment->comment_text }}</p>
+          @if($comment->attachment)
+            <div class="mt-2">
+              <a href="{{ asset('storage/' . $comment->attachment) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-paperclip"></i> View Attachment
+              </a>
+              <small class="text-muted ms-2">{{ basename($comment->attachment) }}</small>
+            </div>
+          @endif
         </div>
       @endforeach
     </div>

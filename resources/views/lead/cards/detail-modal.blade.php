@@ -178,8 +178,9 @@
             @if($comment->attachment)
               <div class="mt-2">
                 <a href="{{ asset('storage/' . $comment->attachment) }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                  📎 View Attachment
+                  <i class="bi bi-paperclip"></i> View Attachment
                 </a>
+                <small class="text-muted ms-2">{{ basename($comment->attachment) }}</small>
               </div>
             @endif
           </div>
