@@ -11,6 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Drop view if exists (created by later migration)
+        DB::statement('DROP VIEW IF EXISTS cards');
+        
         Schema::create('cards', function(Blueprint $table){
             $table->id();
             $table->unsignedBigInteger( 'board_id');

@@ -28,9 +28,28 @@ return new class extends Migration
             $table->foreignId('project_id')->nullable(false)->change();
         });
 
-        // Drop board_id from cards (no foreign key to drop since it wasn't defined)
+        // Drop board_id foreign key first (check if exists), then drop column
+        // Get the actual foreign key name
+        $foreignKeys = DB::select("
+            SELECT CONSTRAINT_NAME 
+            FROM information_schema.KEY_COLUMN_USAGE 
+            WHERE TABLE_SCHEMA = DATABASE() 
+            AND TABLE_NAME = 'management_project_cards' 
+            AND COLUMN_NAME = 'board_id'
+            AND CONSTRAINT_NAME != 'PRIMARY'
+        ");
+        
+        // Drop foreign key if it exists
+        if (!empty($foreignKeys)) {
+            $fkName = $foreignKeys[0]->CONSTRAINT_NAME;
+            DB::statement("ALTER TABLE management_project_cards DROP FOREIGN KEY `{$fkName}`");
+        }
+        
+        // Drop the column
         Schema::table('management_project_cards', function (Blueprint $table) {
-            $table->dropColumn('board_id');
+            if (Schema::hasColumn('management_project_cards', 'board_id')) {
+                $table->dropColumn('board_id');
+            }
         });
 
         // Drop boards table

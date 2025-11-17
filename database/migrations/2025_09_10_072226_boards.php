@@ -11,6 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Drop VIEW if it exists before creating table
+        DB::statement('DROP VIEW IF EXISTS boards');
+        
         Schema::create('boards', function(Blueprint $table){
             $table->id();
             $table->unsignedBigInteger('project_id');
