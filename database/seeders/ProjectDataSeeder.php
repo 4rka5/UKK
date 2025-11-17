@@ -109,11 +109,11 @@ class ProjectDataSeeder extends Seeder
             'card_title' => 'User Authentication Module',
             'description' => 'Implementasi login, register, dan forgot password',
             'priority' => 'high',
-            'status' => 'review',
+            'status' => 'todo',
             'due_date' => now()->addDays(2),
             'created_by' => $leader->id,
             'estimated_hours' => 8,
-            'actual_hours' => 4,
+            'actual_hours' => 0,
         ]);
 
         $card6 = ManagementProjectCard::create([
@@ -128,21 +128,34 @@ class ProjectDataSeeder extends Seeder
             'actual_hours' => 3,
         ]);
 
+        $card7 = ManagementProjectCard::create([
+            'project_id' => $project->id,
+            'card_title' => 'Shopping Cart Functionality',
+            'description' => 'Implementasi fitur keranjang belanja dengan add, update, delete items',
+            'priority' => 'high',
+            'status' => 'todo',
+            'due_date' => now()->addDays(10),
+            'created_by' => $leader->id,
+            'estimated_hours' => 10,
+            'actual_hours' => 0,
+        ]);
+
+        $card8 = ManagementProjectCard::create([
+            'project_id' => $project->id,
+            'card_title' => 'Payment Gateway Integration',
+            'description' => 'Integrasi payment gateway untuk proses checkout',
+            'priority' => 'medium',
+            'status' => 'todo',
+            'due_date' => now()->addDays(15),
+            'created_by' => $leader->id,
+            'estimated_hours' => 8,
+            'actual_hours' => 0,
+        ]);
+
         // Assign Cards to Users
-        ManagementProjectCardAssignment::create([
-            'card_id' => $card1->id,
-            'user_id' => $developer->id,
-            'assignment_status' => 'assigned',
-            'assigned_at' => now(),
-        ]);
-
-        ManagementProjectCardAssignment::create([
-            'card_id' => $card2->id,
-            'user_id' => $designer->id,
-            'assignment_status' => 'assigned',
-            'assigned_at' => now(),
-        ]);
-
+        // Developer sudah punya 1 tugas aktif (card3), jadi card1 belum di-assign
+        // Designer sudah punya 1 tugas aktif (card4), jadi card2 belum di-assign
+        
         ManagementProjectCardAssignment::create([
             'card_id' => $card3->id,
             'user_id' => $developer->id,
@@ -161,15 +174,6 @@ class ProjectDataSeeder extends Seeder
             'work_started_at' => now()->subHours(1),
             'total_work_seconds' => 3600, // 1 hour
             'is_working' => true,
-        ]);
-
-        ManagementProjectCardAssignment::create([
-            'card_id' => $card5->id,
-            'user_id' => $developer->id,
-            'assignment_status' => 'in_progress',
-            'assigned_at' => now()->subDays(3),
-            'total_work_seconds' => 14400, // 4 hours
-            'is_working' => false,
         ]);
 
         ManagementProjectCardAssignment::create([
@@ -265,7 +269,16 @@ class ProjectDataSeeder extends Seeder
         $this->command->info('✓ Project data seeded successfully!');
         $this->command->info("  Project: {$project->project_name}");
         $this->command->info("  Members: 3 (Team Lead, Developer, Designer)");
-        $this->command->info("  Cards: 6 (2 Todo, 2 In Progress, 1 Review, 1 Done)");
+        $this->command->info("  Cards: 8 (4 Todo/Unassigned, 2 In Progress/Assigned, 1 Done, 1 Todo)");
+        $this->command->info("  - Card 1 (Setup Database): UNASSIGNED - waiting for developer");
+        $this->command->info("  - Card 2 (Design Homepage): UNASSIGNED - waiting for designer");
+        $this->command->info("  - Card 3 (Product API): ASSIGNED to Developer (In Progress)");
+        $this->command->info("  - Card 4 (Product Component): ASSIGNED to Designer (In Progress)");
+        $this->command->info("  - Card 5 (User Auth): UNASSIGNED - available");
+        $this->command->info("  - Card 6 (Project Setup): ASSIGNED to Developer (Done)");
+        $this->command->info("  - Card 7 (Shopping Cart): UNASSIGNED - available");
+        $this->command->info("  - Card 8 (Payment Gateway): UNASSIGNED - available");
+        $this->command->info("  Assignments: 3 (1 developer active, 1 designer active, 1 completed)");
         $this->command->info("  Subtasks: 10");
     }
 }
