@@ -391,11 +391,6 @@ window.addEventListener('beforeunload', function() {
         </button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload" type="button" role="tab" {{ !$canWork ? 'disabled' : '' }}>
-          📎 Upload File
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
         <button class="nav-link" id="blocker-tab" data-bs-toggle="tab" data-bs-target="#blocker" type="button" role="tab" {{ !$canWork ? 'disabled' : '' }}>
           🚫 Report Blocker
         </button>
@@ -433,30 +428,6 @@ window.addEventListener('beforeunload', function() {
             </div>
             <div class="col-12">
               <button type="submit" class="btn btn-primary">Submit Progress</button>
-            </div>
-          </div>
-        </form>
-      </div>
-
-      <!-- Upload File Tab -->
-      <div class="tab-pane fade" id="upload" role="tabpanel">
-        <div class="alert alert-info mb-3">
-          <small><strong>ℹ️ Fungsi:</strong> Upload file pendukung seperti screenshot hasil test, file kode, atau dokumen lainnya. File akan tersimpan sebagai attachment dan bisa diakses oleh Team Lead.</small>
-        </div>
-        <form method="POST" action="{{ route('developer.tasks.upload', $card) }}" enctype="multipart/form-data">
-          @csrf
-          <div class="row g-3">
-            <div class="col-12">
-              <label class="form-label">File Attachment</label>
-              <input type="file" name="attachment" class="form-control" required>
-              <small class="text-muted">Max 10MB</small>
-            </div>
-            <div class="col-12">
-              <label class="form-label">Deskripsi</label>
-              <input type="text" name="description" class="form-control" placeholder="Tuliskan Deskripsi FIle">
-            </div>
-            <div class="col-12">
-              <button type="submit" class="btn btn-success">Upload</button>
             </div>
           </div>
         </form>
@@ -547,12 +518,7 @@ window.addEventListener('beforeunload', function() {
     <!-- Tabs Navigation -->
     <ul class="nav nav-tabs mb-3" id="designerTabs" role="tablist">
       <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="design-upload-tab" data-bs-toggle="tab" data-bs-target="#design-upload" type="button" role="tab" {{ !$canWork ? 'disabled' : '' }}>
-          🖼️ Upload Design
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="review-tab" data-bs-toggle="tab" data-bs-target="#review" type="button" role="tab" {{ !$canWork ? 'disabled' : '' }}>
+        <button class="nav-link active" id="review-tab" data-bs-toggle="tab" data-bs-target="#review" type="button" role="tab" {{ !$canWork ? 'disabled' : '' }}>
           ✅ Request Review
         </button>
       </li>
@@ -561,29 +527,8 @@ window.addEventListener('beforeunload', function() {
     <!-- Tabs Content -->
     <div class="tab-content" id="designerTabsContent">
       
-      <!-- Upload Design Tab -->
-      <div class="tab-pane fade show active" id="design-upload" role="tabpanel">
-        <form method="POST" action="{{ route('designer.tasks.uploadDesign', $card) }}" enctype="multipart/form-data">
-          @csrf
-          <div class="row g-3">
-            <div class="col-12">
-              <label class="form-label">Design File</label>
-              <input type="file" name="design_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.svg,.ai,.psd,.fig" required>
-              <small class="text-muted">PDF, JPG, PNG, SVG, AI, PSD, FIG (Max 10MB)</small>
-            </div>
-            <div class="col-12">
-              <label class="form-label">Deskripsi</label>
-              <textarea name="description" class="form-control" rows="3" placeholder="Final UI mockup for login screen"></textarea>
-            </div>
-            <div class="col-12">
-              <button type="submit" class="btn btn-success">Upload Design</button>
-            </div>
-          </div>
-        </form>
-      </div>
-
       <!-- Request Review Tab -->
-      <div class="tab-pane fade" id="review" role="tabpanel">
+      <div class="tab-pane fade show active" id="review" role="tabpanel">
         <form method="POST" action="{{ route('designer.tasks.requestReview', $card) }}">
           @csrf
           <div class="row g-3">
