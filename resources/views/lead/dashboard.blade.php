@@ -59,21 +59,14 @@
       <a href="{{ route('lead.cards.create') }}" class="btn btn-light btn-sm">
         <i class="bi bi-plus-lg"></i> New Card
       </a>
-      <a href="{{ route('lead.boards.create') }}" class="btn btn-outline-light btn-sm ms-2">
-        <i class="bi bi-plus-lg"></i> New Board
-      </a>
     </div>
   </div>
 </div>
 
 <!-- Status Grid -->
 <div class="stats-grid">
-  <div class="stat-box stat-backlog">
-    <div class="number">{{ $todo->where('status', 'backlog')->count() }}</div>
-    <div class="label">Backlog</div>
-  </div>
   <div class="stat-box stat-todo">
-    <div class="number">{{ $todo->where('status', 'todo')->count() }}</div>
+    <div class="number">{{ $todo->count() }}</div>
     <div class="label">To Do</div>
   </div>
   <div class="stat-box stat-progress">
@@ -94,21 +87,22 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h5 class="mb-0 fw-semibold">📋 Kanban Board</h5>
   <div class="d-flex gap-2">
-    <a href="{{ route('lead.boards.index') }}" class="btn btn-outline-secondary btn-sm">Manage Boards</a>
-    <a href="{{ route('lead.cards.index') }}" class="btn btn-outline-primary btn-sm">View All Cards</a>
+    <a href="{{ route('lead.cards.index') }}" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-grid-3x3-gap"></i> View All Cards
+    </a>
   </div>
 </div>
 
 <!-- Kanban Columns -->
 <div class="kanban-board">
-  <!-- Backlog & To Do Column -->
+  <!-- To Do Column -->
   <div class="kanban-column col-todo">
     <div class="kanban-header">
-      <span><span class="icon">📦</span> Backlog & To Do</span>
+      <span><span class="icon">📦</span> To Do</span>
       <span class="badge bg-primary">{{ $todo->count() }}</span>
     </div>
     @forelse($todo as $c)
-      <div class="kanban-card card-{{ $c->status === 'backlog' ? 'backlog' : 'todo' }}">
+      <div class="kanban-card card-todo" onclick="showCardDetail({{ $c->id }})" style="cursor: pointer;">
         <div class="title">{{ $c->card_title }}</div>
         @if($c->description)
           <div class="description">{{ Str::limit($c->description, 80) }}</div>
@@ -117,8 +111,8 @@
           <span class="badge badge-priority bg-{{ $c->priority === 'high' ? 'danger' : ($c->priority === 'medium' ? 'warning text-dark' : 'secondary') }}">
             {{ strtoupper($c->priority) }}
           </span>
-          @if($c->board)
-            <span class="board-tag">{{ $c->board->board_name }}</span>
+          @if($c->project)
+            <span class="board-tag">{{ $c->project->project_name }}</span>
           @endif
           @if($c->due_date)
             @php
@@ -146,7 +140,7 @@
       <span class="badge bg-warning text-dark">{{ $inProgress->count() }}</span>
     </div>
     @forelse($inProgress as $c)
-      <div class="kanban-card card-progress">
+      <div class="kanban-card card-progress" onclick="showCardDetail({{ $c->id }})" style="cursor: pointer;">
         <div class="title">{{ $c->card_title }}</div>
         @if($c->description)
           <div class="description">{{ Str::limit($c->description, 80) }}</div>
@@ -155,8 +149,8 @@
           <span class="badge badge-priority bg-{{ $c->priority === 'high' ? 'danger' : ($c->priority === 'medium' ? 'warning text-dark' : 'secondary') }}">
             {{ strtoupper($c->priority) }}
           </span>
-          @if($c->board)
-            <span class="board-tag">{{ $c->board->board_name }}</span>
+          @if($c->project)
+            <span class="board-tag">{{ $c->project->project_name }}</span>
           @endif
           @if($c->due_date)
             @php
@@ -184,7 +178,7 @@
       <span class="badge bg-warning">{{ $review->count() }}</span>
     </div>
     @forelse($review as $c)
-      <div class="kanban-card card-review">
+      <div class="kanban-card card-review" onclick="showCardDetail({{ $c->id }})" style="cursor: pointer;">
         <div class="title">{{ $c->card_title }}</div>
         @if($c->description)
           <div class="description">{{ Str::limit($c->description, 80) }}</div>
@@ -193,8 +187,8 @@
           <span class="badge badge-priority bg-{{ $c->priority === 'high' ? 'danger' : ($c->priority === 'medium' ? 'warning text-dark' : 'secondary') }}">
             {{ strtoupper($c->priority) }}
           </span>
-          @if($c->board)
-            <span class="board-tag">{{ $c->board->board_name }}</span>
+          @if($c->project)
+            <span class="board-tag">{{ $c->project->project_name }}</span>
           @endif
           @if($c->due_date)
             @php
@@ -222,7 +216,7 @@
       <span class="badge bg-success">{{ $done->count() }}</span>
     </div>
     @forelse($done as $c)
-      <div class="kanban-card card-done">
+      <div class="kanban-card card-done" onclick="showCardDetail({{ $c->id }})" style="cursor: pointer;">
         <div class="title">{{ $c->card_title }}</div>
         @if($c->description)
           <div class="description">{{ Str::limit($c->description, 80) }}</div>
@@ -231,8 +225,8 @@
           <span class="badge badge-priority bg-{{ $c->priority === 'high' ? 'danger' : ($c->priority === 'medium' ? 'warning text-dark' : 'secondary') }}">
             {{ strtoupper($c->priority) }}
           </span>
-          @if($c->board)
-            <span class="board-tag">{{ $c->board->board_name }}</span>
+          @if($c->project)
+            <span class="board-tag">{{ $c->project->project_name }}</span>
           @endif
           @if($c->due_date)
             <span class="due-date">
@@ -249,4 +243,148 @@
     @endforelse
   </div>
 </div>
+
+<!-- Modal Detail Card -->
+<div class="modal fade" id="cardDetailModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detail Tugas</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="cardDetailContent">
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showCardDetail(cardId) {
+  const modal = new bootstrap.Modal(document.getElementById('cardDetailModal'));
+  modal.show();
+  
+  // Load card detail via AJAX
+  fetch(`/lead/cards/${cardId}/detail`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('cardDetailContent').innerHTML = data.html;
+      } else {
+        document.getElementById('cardDetailContent').innerHTML = '<div class="alert alert-danger">Gagal memuat detail</div>';
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      document.getElementById('cardDetailContent').innerHTML = '<div class="alert alert-danger">Terjadi kesalahan</div>';
+    });
+}
+
+function approveCard(cardId) {
+  if (!confirm('Apakah Anda yakin ingin menyetujui tugas ini?')) return;
+  
+  fetch(`/lead/cards/${cardId}/approve`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      location.reload();
+    } else {
+      alert(data.message || 'Gagal approve');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Terjadi kesalahan');
+  });
+}
+
+function rejectCard(cardId) {
+  const reason = prompt('Alasan reject:');
+  if (!reason) return;
+  
+  fetch(`/lead/cards/${cardId}/reject`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+    },
+    body: JSON.stringify({ reason })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      location.reload();
+    } else {
+      alert(data.message || 'Gagal reject');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Terjadi kesalahan');
+  });
+}
+
+function approveExtension(cardId, userId) {
+  if (!confirm('Apakah Anda yakin ingin menyetujui perpanjangan deadline?')) return;
+  
+  fetch(`/lead/cards/${cardId}/extension/approve`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+    },
+    body: JSON.stringify({ user_id: userId })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('✅ Perpanjangan deadline disetujui');
+      location.reload();
+    } else {
+      alert(data.message || 'Gagal approve extension');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Terjadi kesalahan');
+  });
+}
+
+function rejectExtension(cardId, userId) {
+  const reason = prompt('Alasan penolakan perpanjangan (opsional):');
+  if (reason === null) return; // User clicked cancel
+  
+  fetch(`/lead/cards/${cardId}/extension/reject`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+    },
+    body: JSON.stringify({ user_id: userId, reason: reason || 'Tidak ada alasan yang diberikan' })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('❌ Perpanjangan deadline ditolak');
+      location.reload();
+    } else {
+      alert(data.message || 'Gagal reject extension');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Terjadi kesalahan');
+  });
+}
+</script>
 @endsection

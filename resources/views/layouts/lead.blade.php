@@ -9,8 +9,7 @@
         <div class="card-header bg-white fw-semibold">Team Lead</div>
         <div class="list-group list-group-flush">
           <a href="{{ url('/lead') }}" class="list-group-item list-group-item-action {{ request()->is('lead') ? 'active' : '' }}">Dashboard</a>
-          <a href="{{ url('/lead/boards/create') }}" class="list-group-item list-group-item-action">+ Board</a>
-          <a href="{{ url('/lead/cards/create') }}" class="list-group-item list-group-item-action">+ Card</a>
+          <a href="{{ url('/lead/cards') }}" class="list-group-item list-group-item-action {{ request()->is('lead/cards*') && !request()->is('lead') ? 'active' : '' }}">Kelola Cards</a>
         </div>
       </div>
       <div class="small text-muted mt-2 ms-1">Lead: {{ auth()->user()->fullname ?? auth()->user()->username }}</div>

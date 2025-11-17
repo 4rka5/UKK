@@ -9,9 +9,47 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::orderBy('id','desc')->paginate(10);
+        $query = User::query();
+
+        // Search by name, username, or email
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('fullname', 'like', "%{$search}%")
+                  ->orWhere('username', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by role
+        if ($request->filled('role')) {
+            $query->where('role', $request->role);
+        }
+
+        // Filter by task status
+        if ($request->filled('has_tasks')) {
+            if ($request->has_tasks === '1') {
+                // Users with tasks
+                $query->where(function($q) {
+                    $q->whereHas('assignedCards', function($cardQuery) {
+                        $cardQuery->where('status', '!=', 'done');
+                    })
+                    ->orWhereHas('projectMemberships')
+                    ->orWhere('role', 'admin');
+                });
+            } else {
+                // Users without tasks (available)
+                $query->whereDoesntHave('assignedCards', function($cardQuery) {
+                    $cardQuery->where('status', '!=', 'done');
+                })
+                ->whereDoesntHave('projectMemberships')
+                ->where('role', '!=', 'admin');
+            }
+        }
+
+        $users = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
         return view('admin.users.index', compact('users'));
     }
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ManagementProjectBoard;
 use App\Models\Project;
+use App\Models\ProjectMember;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -27,11 +28,16 @@ class BoardController extends Controller
         $user = $request->user();
         $project = Project::findOrFail($projectId);
 
-        // Only team lead assigned to this project can create boards
-        if ($user->role !== 'team_lead' || $project->assigned_to !== $user->id) {
+        // Check if user is team lead member of this project
+        $isTeamLead = \App\Models\ProjectMember::where('project_id', $projectId)
+            ->where('user_id', $user->id)
+            ->where('role', 'team_lead')
+            ->exists();
+
+        if (!$isTeamLead) {
             return response()->json([
                 'success' => false,
-                'message' => 'Only team lead assigned to this project can create boards'
+                'message' => 'Only team lead member of this project can create boards'
             ], 403);
         }
 
@@ -79,11 +85,16 @@ class BoardController extends Controller
         $project = Project::findOrFail($projectId);
         $board = ManagementProjectBoard::where('project_id', $projectId)->findOrFail($id);
 
-        // Only team lead assigned to this project can update boards
-        if ($user->role !== 'team_lead' || $project->assigned_to !== $user->id) {
+        // Check if user is team lead member of this project
+        $isTeamLead = ProjectMember::where('project_id', $projectId)
+            ->where('user_id', $user->id)
+            ->where('role', 'team_lead')
+            ->exists();
+
+        if (!$isTeamLead) {
             return response()->json([
                 'success' => false,
-                'message' => 'Only team lead assigned to this project can update boards'
+                'message' => 'Only team lead member of this project can update boards'
             ], 403);
         }
 
@@ -115,11 +126,16 @@ class BoardController extends Controller
         $project = Project::findOrFail($projectId);
         $board = ManagementProjectBoard::where('project_id', $projectId)->findOrFail($id);
 
-        // Only team lead assigned to this project can delete boards
-        if ($user->role !== 'team_lead' || $project->assigned_to !== $user->id) {
+        // Check if user is team lead member of this project
+        $isTeamLead = ProjectMember::where('project_id', $projectId)
+            ->where('user_id', $user->id)
+            ->where('role', 'team_lead')
+            ->exists();
+
+        if (!$isTeamLead) {
             return response()->json([
                 'success' => false,
-                'message' => 'Only team lead assigned to this project can delete boards'
+                'message' => 'Only team lead member of this project can delete boards'
             ], 403);
         }
 

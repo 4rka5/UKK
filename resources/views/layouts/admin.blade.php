@@ -17,6 +17,9 @@
           <a href="{{ route('admin.projects.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/projects*') ? 'active' : '' }}">
             Projects
           </a>
+          <a href="{{ route('admin.reports.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/reports*') ? 'active' : '' }}">
+            Laporan
+          </a>
         </div>
       </div>
       <div class="small text-muted mt-2 ms-1">Logged in as: {{ auth()->user()->fullname ?? auth()->user()->username }}</div>

@@ -61,7 +61,7 @@ class CardController extends Controller
             'description' => 'nullable|string',
             'due_date' => 'nullable|date',
             'priority' => 'nullable|in:low,medium,high',
-            'status' => 'nullable|in:backlog,todo,in_progress,code_review,testing,done',
+            'status' => 'nullable|in:todo,in_progress,review,done',
             'estimated_hours' => 'nullable|numeric',
             'assigned_to' => 'nullable|exists:users,id' // ID member yang akan dikerjakan
         ]);
@@ -72,6 +72,24 @@ class CardController extends Controller
                 'message' => 'Validation error',
                 'errors' => $validator->errors()
             ], 422);
+        }
+
+        // Check if assigned user is already a project member
+        if ($request->assigned_to) {
+            $board = \App\Models\ManagementProjectBoard::findOrFail($boardId);
+            $project = $board->project;
+            
+            $isProjectMember = \App\Models\ProjectMember::where('project_id', $project->id)
+                ->where('user_id', $request->assigned_to)
+                ->exists();
+
+            if ($isProjectMember) {
+                $assignedUser = \App\Models\User::find($request->assigned_to);
+                return response()->json([
+                    'success' => false,
+                    'message' => "User {$assignedUser->username} sudah bergabung di project {$project->project_name}. User yang sudah bergabung di project tidak dapat diberikan tugas."
+                ], 422);
+            }
         }
 
         $card = ManagementProjectCard::create([
@@ -142,7 +160,7 @@ class CardController extends Controller
                 'description' => 'nullable|string',
                 'due_date' => 'nullable|date',
                 'priority' => 'nullable|in:low,medium,high',
-                'status' => 'nullable|in:backlog,todo,in_progress,code_review,testing,done',
+                'status' => 'nullable|in:todo,in_progress,review,done',
                 'estimated_hours' => 'nullable|numeric',
                 'actual_hours' => 'nullable|numeric',
                 'assigned_to' => 'nullable|exists:users,id'
@@ -154,6 +172,24 @@ class CardController extends Controller
                     'message' => 'Validation error',
                     'errors' => $validator->errors()
                 ], 422);
+            }
+
+            // Check if assigned user is already a project member (when updating assignment)
+            if ($request->has('assigned_to') && $request->assigned_to != $card->assigned_to) {
+                $board = $card->board;
+                $project = $board->project;
+                
+                $isProjectMember = \App\Models\ProjectMember::where('project_id', $project->id)
+                    ->where('user_id', $request->assigned_to)
+                    ->exists();
+
+                if ($isProjectMember) {
+                    $assignedUser = \App\Models\User::find($request->assigned_to);
+                    return response()->json([
+                        'success' => false,
+                        'message' => "User {$assignedUser->username} sudah bergabung di project {$project->project_name}. User yang sudah bergabung di project tidak dapat diberikan tugas."
+                    ], 422);
+                }
             }
 
             $card->update($request->only([
@@ -193,6 +229,22 @@ class CardController extends Controller
                 'success' => false,
                 'message' => 'Validation error',
                 'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Check if user is already a project member
+        $board = $card->board;
+        $project = $board->project;
+        
+        $isProjectMember = \App\Models\ProjectMember::where('project_id', $project->id)
+            ->where('user_id', $request->user_id)
+            ->exists();
+
+        if ($isProjectMember) {
+            $user = \App\Models\User::find($request->user_id);
+            return response()->json([
+                'success' => false,
+                'message' => "User {$user->username} sudah bergabung di project {$project->project_name}. User yang sudah bergabung di project tidak dapat diberikan tugas."
             ], 422);
         }
 

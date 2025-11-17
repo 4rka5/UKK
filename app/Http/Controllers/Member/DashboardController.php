@@ -14,11 +14,13 @@ class DashboardController extends Controller
         $userId = Auth::id();
 
         // Get cards assigned to this user
-        $myTasks = ManagementProjectCard::with(['board.project', 'creator'])
+        // Order: status 'done' di bawah (DESC order), lalu by ID
+        $myTasks = ManagementProjectCard::with(['project', 'creator', 'assignees'])
             ->whereHas('assignees', function($q) use ($userId) {
                 $q->where('users.id', $userId);
             })
             ->orWhere('created_by', $userId)
+            ->orderByRaw("CASE WHEN status = 'done' THEN 1 ELSE 0 END ASC")
             ->orderByDesc('id')
             ->get();
 
@@ -27,7 +29,7 @@ class DashboardController extends Controller
             'total' => $myTasks->count(),
             'todo' => $myTasks->whereIn('status', ['backlog', 'todo'])->count(),
             'in_progress' => $myTasks->where('status', 'in_progress')->count(),
-            'review' => $myTasks->where('status', 'code_review')->count(),
+            'review' => $myTasks->where('status', 'review')->count(),
             'done' => $myTasks->where('status', 'done')->count(),
         ];
 

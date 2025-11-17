@@ -45,9 +45,14 @@
       <div class="label">{{ now()->translatedFormat('l, d F Y') }}</div>
     </div>
     <div class="col-md-4 text-md-end mt-3 mt-md-0">
-      <a href="{{ route('admin.users.create') }}" class="quick-action">
-        <span>➕</span> Tambah User
-      </a>
+      <div class="d-flex gap-2 justify-content-end">
+        <a href="{{ route('admin.reports.index') }}" class="quick-action" style="background: #10b981;">
+          <span>📊</span> Laporan
+        </a>
+        <a href="{{ route('admin.users.create') }}" class="quick-action">
+          <span>➕</span> Tambah User
+        </a>
+      </div>
     </div>
   </div>
 </div>
@@ -85,7 +90,9 @@
     <h5>📋 Project Terbaru</h5>
     <a href="{{ route('admin.projects.create') }}" class="btn btn-primary btn-sm">+ Project Baru</a>
   </div>
-  <div class="table-responsive">
+  
+  <!-- Desktop Table View -->
+  <div class="table-responsive d-none d-md-block">
     <table class="table table-modern">
       <thead>
         <tr>
@@ -126,11 +133,19 @@
               <small class="text-muted">{{ Str::limit($p->description ?? '-', 50) }}</small>
             </td>
             <td class="text-end">
-              <a href="{{ route('admin.projects.edit', $p) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-              <form action="{{ route('admin.projects.destroy', $p) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus project ini?')">
-                @csrf @method('DELETE')
-                <button class="btn btn-sm btn-outline-danger">Hapus</button>
-              </form>
+              <div class="d-flex gap-2 justify-content-end">
+                <a href="{{ route('admin.projects.edit', $p) }}" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-pencil-fill"></i>
+                  <span class="d-none d-lg-inline ms-1">Edit</span>
+                </a>
+                <form action="{{ route('admin.projects.destroy', $p) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus project ini?')">
+                  @csrf @method('DELETE')
+                  <button class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-trash-fill"></i>
+                    <span class="d-none d-lg-inline ms-1">Hapus</span>
+                  </button>
+                </form>
+              </div>
             </td>
           </tr>
         @empty
@@ -144,6 +159,64 @@
         @endforelse
       </tbody>
     </table>
+  </div>
+  
+  <!-- Mobile Card View -->
+  <div class="d-md-none p-3">
+    @forelse($projects as $p)
+      <div class="card mb-3 border">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h6 class="mb-0 fw-bold">{{ $p->project_name }}</h6>
+            @if($p->deadline)
+              @php
+                $deadline = \Carbon\Carbon::parse($p->deadline);
+                $isOverdue = $deadline->isPast();
+              @endphp
+              <span class="badge {{ $isOverdue ? 'bg-danger' : 'bg-success' }} small">
+                <i class="bi bi-calendar3"></i> {{ $deadline->format('d M Y') }}
+              </span>
+            @endif
+          </div>
+          
+          @if($p->owner)
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; font-size: 0.9rem;">
+                {{ strtoupper(substr($p->owner->fullname ?? $p->owner->username, 0, 1)) }}
+              </div>
+              <div>
+                <div class="small fw-semibold">{{ $p->owner->fullname ?? $p->owner->username }}</div>
+                <div class="text-muted" style="font-size: 0.75rem;">
+                  <i class="bi bi-person-badge"></i> {{ ucfirst($p->owner->role) }}
+                </div>
+              </div>
+            </div>
+          @endif
+          
+          @if($p->description)
+            <p class="small text-muted mb-3">{{ Str::limit($p->description, 80) }}</p>
+          @endif
+          
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{{ route('admin.projects.edit', $p) }}" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-pencil-fill"></i> Edit
+            </a>
+            <form action="{{ route('admin.projects.destroy', $p) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus project ini?')">
+              @csrf @method('DELETE')
+              <button class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash-fill"></i> Hapus
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    @empty
+      <div class="text-center text-muted py-5">
+        <div style="font-size: 3rem; opacity: 0.3;">📭</div>
+        <p class="mb-0">Belum ada project</p>
+        <small>Klik tombol "+ Project Baru" untuk membuat project</small>
+      </div>
+    @endforelse
   </div>
 </div>
 
@@ -169,16 +242,16 @@
         @forelse($users->take(10) as $u)
           <tr>
             <td>
-              <div class="d-flex align-items-center gap-2">
-                <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+              <div class="d-flex align-items-center gap-3">
+                <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1rem; flex-shrink: 0;">
                   {{ strtoupper(substr($u->fullname ?? $u->username, 0, 1)) }}
                 </div>
                 <strong>{{ $u->fullname ?? '-' }}</strong>
               </div>
             </td>
-            <td><code>{{ $u->username }}</code></td>
-            <td><small>{{ $u->email }}</small></td>
-            <td>
+            <td class="py-3"><code class="bg-light px-2 py-1 rounded">{{ $u->username }}</code></td>
+            <td class="py-3"><small class="text-muted">{{ $u->email }}</small></td>
+            <td class="py-3">
               <span class="badge-role
                 @if($u->role === 'admin') bg-danger text-white
                 @elseif($u->role === 'team_lead') bg-warning text-dark
@@ -188,19 +261,27 @@
                 {{ ucfirst(str_replace('_', ' ', $u->role)) }}
               </span>
             </td>
-            <td>
+            <td class="py-3">
               <span class="badge {{ $u->status === 'active' ? 'bg-success' : 'bg-secondary' }}">
                 {{ ucfirst($u->status ?? 'idle') }}
               </span>
             </td>
-            <td class="text-end">
-              <a href="{{ route('admin.users.edit', $u) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-              @if($u->id !== auth()->id())
-                <form action="{{ route('admin.users.destroy', $u) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus user ini?')">
-                  @csrf @method('DELETE')
-                  <button class="btn btn-sm btn-outline-danger">Hapus</button>
-                </form>
-              @endif
+            <td class="text-end py-3">
+              <div class="d-flex gap-2 justify-content-end">
+                <a href="{{ route('admin.users.edit', $u) }}" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-pencil-fill"></i>
+                  <span class="d-none d-lg-inline ms-1">Edit</span>
+                </a>
+                @if($u->id !== auth()->id())
+                  <form action="{{ route('admin.users.destroy', $u) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus user ini?')">
+                    @csrf @method('DELETE')
+                    <button class="btn btn-sm btn-outline-danger">
+                      <i class="bi bi-trash-fill"></i>
+                      <span class="d-none d-lg-inline ms-1">Hapus</span>
+                    </button>
+                  </form>
+                @endif
+              </div>
             </td>
           </tr>
         @empty

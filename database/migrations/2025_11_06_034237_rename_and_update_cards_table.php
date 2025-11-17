@@ -19,16 +19,26 @@ return new class extends Migration
 
             // Update struktur tabel
             Schema::table('management_project_cards', function (Blueprint $table) {
-                // Tambah kolom description baru
-                $table->text('description')->nullable()->after('card_title');
+                // Tambah kolom description baru jika belum ada
+                if (!Schema::hasColumn('management_project_cards', 'description')) {
+                    $table->text('description')->nullable()->after('card_title');
+                }
             });
 
-            // Copy data dari deskripsi ke description
-            DB::statement("UPDATE management_project_cards SET description = deskripsi");
+            // Copy data dari deskripsi ke description jika kolom deskripsi ada and description exists
+            try {
+                if (Schema::hasColumn('management_project_cards', 'deskripsi') && Schema::hasColumn('management_project_cards', 'description')) {
+                    DB::statement("UPDATE management_project_cards SET description = deskripsi");
+                }
+            } catch (\Throwable $e) {
+                // ignore
+            }
 
-            // Drop kolom deskripsi lama
+            // Drop kolom deskripsi lama jika ada
             Schema::table('management_project_cards', function (Blueprint $table) {
-                $table->dropColumn('deskripsi');
+                if (Schema::hasColumn('management_project_cards', 'deskripsi')) {
+                    $table->dropColumn('deskripsi');
+                }
             });
         }
 

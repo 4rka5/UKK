@@ -25,7 +25,15 @@
 </style>
 
 <div class="mb-4">
-  <h3 class="mb-3">📋 Tugas Saya</h3>
+  @if(auth()->user()->role === 'developer')
+    <h3 class="mb-3">💻 Developer Dashboard</h3>
+    <p class="text-muted">Kelola tugas development Anda | Max 1 tugas aktif</p>
+  @elseif(auth()->user()->role === 'designer')
+    <h3 class="mb-3">🎨 Designer Dashboard</h3>
+    <p class="text-muted">Kelola tugas desain UI/UX Anda | Max 1 tugas aktif</p>
+  @else
+    <h3 class="mb-3">📋 Tugas Saya</h3>
+  @endif
 
   <!-- Stats Grid -->
   <div class="stats-grid">
@@ -83,15 +91,15 @@
                 {{ strtoupper($task->priority) }}
               </span>
 
-              @if($task->board)
+              @if($task->project)
                 <span class="badge bg-light text-dark border">
-                  📋 {{ $task->board->board_name }}
+                  📋 {{ $task->project->project_name }}
                 </span>
               @endif
 
-              @if($task->board && $task->board->project)
+              @if($task->project)
                 <span class="badge bg-light text-dark border">
-                  📁 {{ $task->board->project->project_name }}
+                  📁 {{ $task->project->project_name }}
                 </span>
               @endif
 
@@ -99,19 +107,83 @@
                 @php
                   $dueDate = \Carbon\Carbon::parse($task->due_date);
                   $isOverdue = $dueDate->isPast() && $task->status !== 'done';
+                  
+                  // Check if user can work on this task
+                  $userAssignment = $task->assignees->where('id', auth()->id())->first();
+                  $canWork = true;
+                  $extensionStatus = null;
+                  
+                  if ($isOverdue && $userAssignment) {
+                    $pivot = $userAssignment->pivot;
+                    if ($pivot->extension_approved === true) {
+                      $canWork = true;
+                      $extensionStatus = 'approved';
+                    } elseif ($pivot->extension_requested && is_null($pivot->extension_approved)) {
+                      $canWork = false;
+                      $extensionStatus = 'pending';
+                    } elseif ($pivot->extension_approved === false) {
+                      $canWork = false;
+                      $extensionStatus = 'rejected';
+                    } else {
+                      $canWork = false;
+                      $extensionStatus = null;
+                    }
+                  }
                 @endphp
                 <span class="badge {{ $isOverdue ? 'bg-danger' : 'bg-light text-dark border' }}">
                   📅 {{ $dueDate->format('d M Y') }}
                   @if($isOverdue) - OVERDUE @endif
                 </span>
+                
+                @if($extensionStatus === 'pending')
+                  <span class="badge bg-warning text-dark">⏳ Extension Pending</span>
+                @elseif($extensionStatus === 'approved')
+                  <span class="badge bg-success">✅ Extension Approved</span>
+                @elseif($extensionStatus === 'rejected')
+                  <span class="badge bg-danger">❌ Extension Rejected</span>
+                @endif
+              @else
+                @php
+                  $canWork = true;
+                  $extensionStatus = null;
+                  $isOverdue = false;
+                @endphp
               @endif
             </div>
           </div>
-          <div class="ms-3">
-            <a href="{{ route('member.cards.show', $task) }}" class="btn btn-sm btn-primary">
-              Lihat Detail
-            </a>
-          </div>
+          @if($task->status !== 'done')
+            <div class="ms-3">
+              @if($isOverdue && !$canWork)
+                @if($extensionStatus === 'pending')
+                  <button class="btn btn-sm btn-warning" disabled>
+                    ⏳ Menunggu Approval
+                  </button>
+                @elseif($extensionStatus === 'rejected')
+                  <button type="button" class="btn btn-sm btn-danger" onclick="openExtensionModal({{ $task->id }}, '{{ $task->card_title }}', '{{ $task->due_date }}')">
+                    📝 Ajukan Ulang
+                  </button>
+                @else
+                  <button type="button" class="btn btn-sm btn-danger" onclick="openExtensionModal({{ $task->id }}, '{{ $task->card_title }}', '{{ $task->due_date }}')">
+                    ⚠️ Perpanjangan
+                  </button>
+                @endif
+              @else
+                <a href="{{ route('member.cards.show', $task) }}" class="btn btn-sm btn-primary">
+                  @if(auth()->user()->role === 'developer')
+                    🛠️ Kerjakan
+                  @elseif(auth()->user()->role === 'designer')
+                    🎨 Design
+                  @else
+                    Lihat Detail
+                  @endif
+                </a>
+              @endif
+            </div>
+          @else
+            <div class="ms-3">
+              <span class="badge bg-success fs-6 px-3 py-2">✅ Selesai</span>
+            </div>
+          @endif
         </div>
       </div>
     @empty
@@ -123,4 +195,65 @@
     @endforelse
   </div>
 </div>
+
+<!-- Extension Request Modal -->
+<div class="modal fade" id="extensionModal" tabindex="-1" aria-labelledby="extensionModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="extensionModalLabel">📝 Ajukan Perpanjangan Deadline</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="extensionForm" method="POST">
+        @csrf
+        <div class="modal-body">
+          <div class="alert alert-danger" id="overdueInfo">
+            <small><strong>⚠️ Task Overdue:</strong><br>
+            <strong id="taskTitle"></strong><br>
+            Deadline: <strong id="taskDeadline"></strong></small>
+          </div>
+          
+          <div class="alert alert-info">
+            <small><strong>ℹ️ Informasi:</strong><br>
+            Tugas ini sudah melewati deadline. Untuk melanjutkan pekerjaan, Anda perlu persetujuan dari Team Lead.</small>
+          </div>
+          
+          <div class="mb-3">
+            <label for="extension_reason" class="form-label">Alasan Perpanjangan <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="extension_reason" name="extension_reason" rows="4" required placeholder="Jelaskan mengapa Anda memerlukan perpanjangan deadline..."></textarea>
+            <small class="text-muted">Jelaskan kendala atau alasan yang menyebabkan keterlambatan.</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary">📤 Kirim Permohonan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function openExtensionModal(cardId, cardTitle, dueDate) {
+  // Set task info in modal
+  document.getElementById('taskTitle').textContent = cardTitle;
+  document.getElementById('taskDeadline').textContent = new Date(dueDate).toLocaleDateString('id-ID', { 
+    day: 'numeric', 
+    month: 'long', 
+    year: 'numeric' 
+  });
+  
+  // Set form action
+  const form = document.getElementById('extensionForm');
+  form.action = `/member/cards/${cardId}/request-extension`;
+  
+  // Clear previous reason
+  document.getElementById('extension_reason').value = '';
+  
+  // Show modal
+  const modal = new bootstrap.Modal(document.getElementById('extensionModal'));
+  modal.show();
+}
+</script>
+
 @endsection

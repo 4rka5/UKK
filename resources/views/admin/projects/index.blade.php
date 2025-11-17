@@ -1,35 +1,383 @@
 @extends('layouts.admin')
 @section('title','Kelola Project')
 @section('adminContent')
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h3 class="mb-0">Project</h3>
-  <a href="{{ route('admin.projects.create') }}" class="btn btn-primary btn-sm">+ Project</a>
+
+<style>
+.stat-card {
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+.stat-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+.project-card {
+  transition: all 0.2s ease;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+}
+.project-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+.project-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+.project-name {
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+.project-meta {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+.action-btns {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.action-btns .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+.search-filter-bar {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+}
+/* Responsive Adjustments */
+@media (max-width: 991px) {
+  .project-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+  }
+  .project-name {
+    font-size: 1rem;
+  }
+}
+@media (max-width: 768px) {
+  .stat-card {
+    margin-bottom: 0.75rem;
+  }
+}
+@media (max-width: 767px) {
+  .project-card {
+    padding: 1rem !important;
+  }
+  .project-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+  .action-btns {
+    width: 100%;
+    justify-content: stretch;
+  }
+  .action-btns .btn {
+    flex: 1;
+    justify-content: center;
+    padding: 0.5rem 0.25rem;
+  }
+  .action-btns .btn span {
+    display: none;
+  }
+  .action-btns .btn i {
+    margin: 0 !important;
+  }
+}
+@media (max-width: 575px) {
+  .project-card .col-6 {
+    width: 50% !important;
+  }
+}
+</style>
+
+<div class="mb-3">
+  <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i> Kembali
+  </a>
 </div>
 
-<div class="card shadow-sm">
-  <div class="table-responsive">
-    <table class="table table-hover mb-0">
-      <thead><tr><th>Nama</th><th>Owner</th><th>Deadline</th><th></th></tr></thead>
-      <tbody>
-        @forelse($projects as $p)
-          <tr>
-            <td>{{ $p->project_name }}</td>
-            <td>{{ $p->owner->fullname ?? '-' }}</td>
-            <td>{{ $p->deadline ?? '-' }}</td>
-            <td class="text-end">
-              <a href="{{ route('admin.projects.edit',$p) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
-              <form action="{{ route('admin.projects.destroy',$p) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus project?')">
-                @csrf @method('DELETE')
-                <button class="btn btn-sm btn-outline-danger">Hapus</button>
-              </form>
-            </td>
-          </tr>
-        @empty
-          <tr><td colspan="4" class="text-center text-muted p-3">Belum ada project.</td></tr>
-        @endforelse
-      </tbody>
-    </table>
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
+  <div>
+    <h3 class="mb-1">📁 Kelola Project</h3>
+    <p class="text-muted mb-0 small">Manajemen project tim</p>
   </div>
-  <div class="card-footer">{{ $projects->links() }}</div>
+  <a href="{{ route('admin.projects.create') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Tambah Project
+  </a>
 </div>
+
+@php
+  $totalProjects = $projects->total();
+  $activeProjects = \App\Models\Project::whereHas('boards', function($q) {
+    $q->whereHas('cards', function($cardQuery) {
+      $cardQuery->whereIn('status', ['todo', 'in_progress']);
+    });
+  })->count();
+  $completedProjects = \App\Models\Project::whereDoesntHave('boards', function($q) {
+    $q->whereHas('cards', function($cardQuery) {
+      $cardQuery->whereIn('status', ['todo', 'in_progress']);
+    });
+  })->whereHas('boards.cards')->count();
+  $overdueProjects = \App\Models\Project::where('deadline', '<', now())->count();
+@endphp
+
+<!-- Statistics Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card bg-white">
+      <div class="d-flex align-items-center gap-3">
+        <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+          <i class="bi bi-folder-fill"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Total Project</div>
+          <div class="h4 mb-0 fw-bold">{{ $totalProjects }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card bg-white">
+      <div class="d-flex align-items-center gap-3">
+        <div class="stat-icon bg-info bg-opacity-10 text-info">
+          <i class="bi bi-hourglass-split"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Aktif</div>
+          <div class="h4 mb-0 fw-bold">{{ $activeProjects }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card bg-white">
+      <div class="d-flex align-items-center gap-3">
+        <div class="stat-icon bg-success bg-opacity-10 text-success">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Selesai</div>
+          <div class="h4 mb-0 fw-bold">{{ $completedProjects }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card bg-white">
+      <div class="d-flex align-items-center gap-3">
+        <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Terlambat</div>
+          <div class="h4 mb-0 fw-bold">{{ $overdueProjects }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="search-filter-bar">
+  <form method="GET" action="{{ route('admin.projects.index') }}">
+    <div class="row g-3 align-items-end">
+      <div class="col-12 col-md-5">
+        <label class="form-label small fw-semibold mb-1">
+          <i class="bi bi-search"></i> Cari Project
+        </label>
+        <input type="text" name="search" class="form-control" 
+               placeholder="Cari nama project atau owner..." 
+               value="{{ request('search') }}">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label small fw-semibold mb-1">
+          <i class="bi bi-calendar-event"></i> Deadline
+        </label>
+        <select name="deadline_status" class="form-select">
+          <option value="">Semua</option>
+          <option value="overdue" {{ request('deadline_status') === 'overdue' ? 'selected' : '' }}>Terlambat</option>
+          <option value="upcoming" {{ request('deadline_status') === 'upcoming' ? 'selected' : '' }}>7 Hari Lagi</option>
+          <option value="active" {{ request('deadline_status') === 'active' ? 'selected' : '' }}>Masih Aman</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small fw-semibold mb-1">
+          <i class="bi bi-activity"></i> Status
+        </label>
+        <select name="status" class="form-select">
+          <option value="">Semua</option>
+          <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Aktif</option>
+          <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Selesai</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-2">
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary flex-grow-1">
+            <i class="bi bi-search"></i> <span class="d-none d-md-inline">Cari</span>
+          </button>
+          <a href="{{ route('admin.projects.index') }}" class="btn btn-outline-secondary" title="Reset Filter">
+            <i class="bi bi-arrow-clockwise"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="row g-3">
+  @forelse($projects as $p)
+    <div class="col-12">
+      <div class="project-card p-3">
+        <div class="row align-items-center g-3">
+          <!-- Project Icon & Name -->
+          <div class="col-12 col-md-5">
+            <div class="d-flex align-items-center gap-3">
+              <div class="project-icon text-white">
+                📁
+              </div>
+              <div class="flex-grow-1">
+                <div class="project-name">{{ $p->project_name }}</div>
+                <div class="project-meta">
+                  <i class="bi bi-person-circle me-1"></i>{{ $p->owner->fullname ?? $p->owner->username ?? '-' }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Deadline -->
+          <div class="col-6 col-md-3">
+            <small class="text-muted d-block mb-1">Deadline</small>
+            @if($p->deadline)
+              @php
+                $deadline = \Carbon\Carbon::parse($p->deadline);
+                $isOverdue = $deadline->isPast();
+                $daysLeft = (int) now()->diffInDays($deadline, false);
+              @endphp
+              <span class="badge {{ $isOverdue ? 'bg-danger' : ($daysLeft <= 7 ? 'bg-warning text-dark' : 'bg-success') }}">
+                <i class="bi bi-calendar-event me-1"></i>{{ $deadline->format('d M Y') }}
+              </span>
+              @if(!$isOverdue && $daysLeft >= 0)
+                <small class="text-muted d-block mt-1">{{ abs($daysLeft) }} hari lagi</small>
+              @elseif($isOverdue)
+                <small class="text-danger d-block mt-1">Terlambat {{ abs($daysLeft) }} hari</small>
+              @endif
+            @else
+              <span class="badge bg-secondary">Tidak ada deadline</span>
+            @endif
+          </div>
+
+          <!-- Members Count -->
+          <div class="col-6 col-md-2">
+            <small class="text-muted d-block mb-1">Anggota</small>
+            <span class="fw-semibold">
+              <i class="bi bi-people-fill text-primary me-1"></i>{{ $p->members->count() ?? 0 }} orang
+            </span>
+          </div>
+
+          <!-- Actions -->
+          <div class="col-12 col-md-2">
+            <div class="action-btns justify-content-end">
+              <a href="{{ route('admin.projects.members', $p) }}" class="btn btn-sm btn-outline-info" title="Kelola Anggota">
+                <i class="bi bi-people-fill"></i>
+                <span class="d-none d-md-inline ms-1">Anggota</span>
+              </a>
+              <a href="{{ route('admin.projects.edit',$p) }}" class="btn btn-sm btn-outline-primary" title="Edit Project">
+                <i class="bi bi-pencil-fill"></i>
+                <span class="d-none d-md-inline ms-1">Edit</span>
+              </a>
+              <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteProject({{ $p->id }}, '{{ addslashes($p->project_name) }}')" title="Hapus Project">
+                <i class="bi bi-trash-fill"></i>
+                <span class="d-none d-md-inline ms-1">Hapus</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  @empty
+    <div class="col-12">
+      <div class="text-center py-5 bg-white rounded-3 border">
+        <i class="bi bi-folder-x" style="font-size: 4rem; color: #e5e7eb;"></i>
+        <p class="text-muted mt-3 mb-2 fw-semibold">Tidak ada project ditemukan</p>
+        @if(request()->hasAny(['search', 'deadline_status', 'status']))
+          <p class="text-muted small mb-3">Coba ubah filter pencarian Anda</p>
+          <a href="{{ route('admin.projects.index') }}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-arrow-clockwise"></i> Reset Filter
+          </a>
+        @else
+          <p class="text-muted small mb-3">Belum ada project yang terdaftar</p>
+          <a href="{{ route('admin.projects.create') }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus-circle"></i> Tambah Project Pertama
+          </a>
+        @endif
+      </div>
+    </div>
+  @endforelse
+</div>
+
+@if($projects->hasPages())
+  <div class="d-flex justify-content-center mt-4">
+    {{ $projects->links('pagination::bootstrap-5') }}
+  </div>
+@endif
+
+<script>
+function deleteProject(id, name) {
+  if (confirm('Yakin hapus project "' + name + '"?\n\nProject dengan data historis (boards/members) tidak bisa dihapus.')) {
+    // Create form dynamically
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/projects/' + id;
+    
+    // CSRF token
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_token';
+    csrfInput.value = '{{ csrf_token() }}';
+    form.appendChild(csrfInput);
+    
+    // Method DELETE
+    const methodInput = document.createElement('input');
+    methodInput.type = 'hidden';
+    methodInput.name = '_method';
+    methodInput.value = 'DELETE';
+    form.appendChild(methodInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+  }
+}
+</script>
+
 @endsection

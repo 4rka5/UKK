@@ -1,6 +1,11 @@
 @extends('layouts.admin')
 @section('title','Edit Project')
 @section('adminContent')
+<div class="mb-3">
+  <a href="{{ route('admin.projects.index') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i> Kembali
+  </a>
+</div>
 <h3 class="mb-3">Edit Project</h3>
 <form method="POST" action="{{ route('admin.projects.update',$project) }}" class="card p-3 shadow-sm">
   @csrf @method('PUT')

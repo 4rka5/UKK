@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -8,15 +7,26 @@ use Illuminate\Database\Eloquent\Model;
 class ManagementProjectBoard extends Model
 {
     protected $table = 'boards';
-    protected $fillable = ['project_id','board_name','description'];
+    
+    protected $fillable = [
+        'project_id',
+        'board_name',
+        'description'
+    ];
 
-    public function project() {
+    /**
+     * Relationship: Board belongs to a Project
+     */
+    public function project()
+    {
         return $this->belongsTo(Project::class);
     }
 
-    public function cards() {
+    /**
+     * Relationship: Board has many Cards
+     */
+    public function cards()
+    {
         return $this->hasMany(ManagementProjectCard::class, 'board_id');
     }
 }
-
-?>

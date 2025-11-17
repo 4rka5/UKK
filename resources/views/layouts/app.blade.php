@@ -3,8 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>@yield('title', 'Manajemen Proyek')</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="{{ asset('css/notifications.css') }}">
   <style>
     body { background: #f6f8fb; }
     .auth-card { margin-top: 64px; }
@@ -58,14 +61,21 @@
             </li>
           @endif
 
-          <li class="nav-item">
-            <a class="nav-link {{ request()->is('member*') ? 'active' : '' }}" href="{{ url('/member') }}">Member</a>
-          </li>
+          @if(!in_array($role, ['admin', 'team_lead']))
+            <li class="nav-item">
+              <a class="nav-link {{ request()->is('member*') ? 'active' : '' }}" href="{{ url('/member') }}">Member</a>
+            </li>
+          @endif
         @endauth
       </ul>
 
       <ul class="navbar-nav ms-auto">
         @auth
+          <!-- Notifications Bell -->
+          <li class="nav-item me-3">
+            @include('partials.notifications')
+          </li>
+          
           @php $displayName = auth()->user()->fullname ?: auth()->user()->username; @endphp
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
