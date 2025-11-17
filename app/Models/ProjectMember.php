@@ -9,7 +9,9 @@ class ProjectMember extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['project_id', 'user_id', 'role'];
+    public $timestamps = false;
+
+    protected $fillable = ['project_id', 'user_id', 'role', 'joined_at'];
 
     public function project()
     {
