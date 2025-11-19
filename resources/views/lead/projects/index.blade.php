@@ -1,15 +1,58 @@
 @extends('layouts.lead')
 
-@section('title', 'Kelola Project')
+@section('title', 'Project Saya')
 
-@section('content')
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0"><i class="bi bi-clipboard-check"></i> Project Saya</h1>
-            <p class="text-muted mb-0">Kelola dan ajukan project yang ditugaskan sebagai selesai</p>
-        </div>
-    </div>
+@section('leadContent')
+<style>
+.project-item {
+  transition: all 0.2s ease;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+}
+.project-item:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+.project-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+.project-title-text {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+.project-meta {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+@media (max-width: 768px) {
+  .project-item .row > div {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}
+</style>
+
+<div class="mb-3">
+  <a href="{{ route('lead.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i> Kembali
+  </a>
+</div>
+
+<div class="mb-4">
+  <h3 class="mb-1">📂 Project Saya</h3>
+  <p class="text-muted mb-0 small">Kelola dan ajukan project yang ditugaskan sebagai selesai</p>
+</div>
 
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -27,69 +70,61 @@
 
     <!-- Statistics Cards -->
     <div class="row g-3 mb-4">
-        <div class="col-md-3 col-sm-6">
+        <div class="col-6 col-lg-3">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3">
-                                <i class="bi bi-folder2 fs-4"></i>
-                            </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Total Project</p>
+                            <h3 class="mb-0">{{ $stats['total'] }}</h3>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted mb-1 small">Total Project</h6>
-                            <h4 class="mb-0">{{ $stats['total'] }}</h4>
+                        <div class="bg-primary bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-folder-fill text-primary fs-4"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
+        <div class="col-6 col-lg-3">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-3">
-                                <i class="bi bi-clock-history fs-4"></i>
-                            </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Pending</p>
+                            <h3 class="mb-0 text-warning">{{ $stats['pending'] }}</h3>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted mb-1 small">Pending</h6>
-                            <h4 class="mb-0">{{ $stats['pending'] }}</h4>
+                        <div class="bg-warning bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-clock-history text-warning fs-4"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
+        <div class="col-6 col-lg-3">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-success bg-opacity-10 text-success rounded-circle p-3">
-                                <i class="bi bi-check-circle fs-4"></i>
-                            </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Approved</p>
+                            <h3 class="mb-0 text-success">{{ $stats['approved'] }}</h3>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted mb-1 small">Approved</h6>
-                            <h4 class="mb-0">{{ $stats['approved'] }}</h4>
+                        <div class="bg-success bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-check-circle-fill text-success fs-4"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
+        <div class="col-6 col-lg-3">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3">
-                                <i class="bi bi-play-circle fs-4"></i>
-                            </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1 small">Active</p>
+                            <h3 class="mb-0 text-info">{{ $stats['active'] }}</h3>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted mb-1 small">Active</h6>
-                            <h4 class="mb-0">{{ $stats['active'] }}</h4>
+                        <div class="bg-info bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-play-circle-fill text-info fs-4"></i>
                         </div>
                     </div>
                 </div>
@@ -97,32 +132,44 @@
         </div>
     </div>
 
+    <!-- Action Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <small class="text-muted">
+                Menampilkan {{ $projects->firstItem() ?? 0 }} - {{ $projects->lastItem() ?? 0 }} dari {{ $projects->total() }} project
+            </small>
+        </div>
+    </div>
+
     <!-- Projects Table -->
     <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-bottom">
-            <h5 class="mb-0"><i class="bi bi-list-ul"></i> Daftar Project</h5>
-        </div>
         <div class="card-body p-0">
             @if($projects->count() > 0)
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Nama Project</th>
-                                <th>Deadline</th>
-                                <th class="text-center">Status</th>
-                                <th>Direview Oleh</th>
-                                <th>Tanggal Review</th>
-                                <th class="text-center">Aksi</th>
+                                <th style="width: 35%;">Nama Project</th>
+                                <th style="width: 15%;">Deadline</th>
+                                <th style="width: 15%;" class="text-center">Status</th>
+                                <th style="width: 15%;">Direview</th>
+                                <th style="width: 10%;">Tanggal</th>
+                                <th style="width: 10%;" class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($projects as $project)
                                 <tr>
                                     <td>
-                                        <strong>{{ $project->project_name }}</strong>
-                                        <br>
-                                        <small class="text-muted">{{ Str::limit($project->description, 60) }}</small>
+                                        <div class="d-flex align-items-center">
+                                            <div class="project-icon bg-primary bg-opacity-10 text-primary me-3">
+                                                <i class="bi bi-folder-fill"></i>
+                                            </div>
+                                            <div>
+                                                <div class="project-title-text">{{ $project->project_name }}</div>
+                                                <small class="text-muted">{{ Str::limit($project->description, 60) }}</small>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td>
                                         <span class="badge bg-{{ $project->deadline < now() ? 'danger' : 'info' }}">
@@ -131,7 +178,7 @@
                                     </td>
                                     <td class="text-center">
                                         @if($project->status === 'pending')
-                                            <span class="badge bg-warning"><i class="bi bi-clock-history"></i> Menunggu Verifikasi</span>
+                                            <span class="badge bg-warning"><i class="bi bi-clock-history"></i> Pending</span>
                                         @elseif($project->status === 'active')
                                             <span class="badge bg-primary"><i class="bi bi-play-circle"></i> Aktif</span>
                                         @elseif($project->status === 'approved')
@@ -142,29 +189,29 @@
                                     </td>
                                     <td>
                                         @if($project->reviewer)
-                                            <i class="bi bi-person-check"></i> {{ $project->reviewer->fullname ?? $project->reviewer->username }}
+                                            <small>{{ $project->reviewer->fullname ?? $project->reviewer->username }}</small>
                                         @else
                                             <span class="text-muted">-</span>
                                         @endif
                                     </td>
                                     <td>
                                         @if($project->reviewed_at)
-                                            <small>{{ $project->reviewed_at->format('d M Y H:i') }}</small>
+                                            <small class="text-muted">{{ $project->reviewed_at->format('d M Y') }}</small>
                                         @else
                                             <span class="text-muted">-</span>
                                         @endif
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm">
-                                            <a href="{{ route('lead.projects.show', $project) }}" class="btn btn-outline-info" title="Lihat Detail">
-                                                <i class="bi bi-eye"></i> Detail
+                                            <a href="{{ route('lead.projects.show', $project) }}" class="btn btn-outline-info btn-sm" title="Detail">
+                                                <i class="bi bi-eye"></i>
                                             </a>
                                             
                                             @if(in_array($project->status, ['active', 'approved']))
                                                 <form action="{{ route('lead.projects.submitCompletion', $project) }}" method="POST" style="display: inline;">
                                                     @csrf
-                                                    <button type="submit" class="btn btn-outline-success" title="Ajukan Selesai" onclick="return confirm('Ajukan project ini sebagai selesai?')">
-                                                        <i class="bi bi-send-check"></i> Selesai
+                                                    <button type="submit" class="btn btn-outline-success btn-sm" title="Ajukan Selesai" onclick="return confirm('Ajukan project ini sebagai selesai?')">
+                                                        <i class="bi bi-send-check"></i>
                                                     </button>
                                                 </form>
                                             @endif
@@ -173,8 +220,8 @@
                                 </tr>
                                 @if($project->status === 'active' && $project->rejection_reason)
                                     <tr class="table-warning">
-                                        <td colspan="6">
-                                            <small><strong><i class="bi bi-exclamation-triangle"></i> Feedback Admin:</strong> {{ $project->rejection_reason }}</small>
+                                        <td colspan="6" class="py-2">
+                                            <small><i class="bi bi-info-circle"></i> <strong>Feedback Admin:</strong> {{ $project->rejection_reason }}</small>
                                         </td>
                                     </tr>
                                 @endif
@@ -184,17 +231,18 @@
                 </div>
             @else
                 <div class="text-center py-5">
-                    <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
-                    <p class="text-muted mt-3">Belum ada project yang ditugaskan kepada Anda.</p>
+                    <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
+                        <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                    </div>
+                    <p class="text-muted">Belum ada project yang ditugaskan kepada Anda.</p>
                     <p class="text-muted small">Hubungi admin untuk mendapatkan project baru.</p>
                 </div>
             @endif
         </div>
         @if($projects->hasPages())
-            <div class="card-footer bg-white">
+            <div class="card-footer bg-white border-top">
                 {{ $projects->links() }}
             </div>
         @endif
     </div>
-</div>
 @endsection
