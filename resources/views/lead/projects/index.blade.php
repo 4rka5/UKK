@@ -152,7 +152,11 @@
                                         @if($project->status === 'active')
                                             <span class="badge bg-primary"><i class="bi bi-play-circle"></i> Aktif</span>
                                         @elseif($project->status === 'done')
-                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Done</span>
+                                            @if($project->reviewed_by)
+                                                <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Disetujui</span>
+                                            @else
+                                                <span class="badge bg-warning text-dark"><i class="bi bi-clock-history"></i> Menunggu Review</span>
+                                            @endif
                                         @endif
                                     </td>
                                     <td>
@@ -182,6 +186,10 @@
                                                         <i class="bi bi-send-check"></i>
                                                     </button>
                                                 </form>
+                                            @elseif($project->status === 'done' && $project->reviewed_by)
+                                                <span class="badge bg-success ms-1"><i class="bi bi-check-circle-fill"></i> Selesai</span>
+                                            @elseif($project->status === 'done' && !$project->reviewed_by)
+                                                <span class="badge bg-warning text-dark ms-1"><i class="bi bi-hourglass-split"></i> Direview</span>
                                             @endif
                                         </div>
                                     </td>

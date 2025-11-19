@@ -270,7 +270,11 @@
               @if($p->status === 'active')
                 <span class="badge bg-primary"><i class="bi bi-play-circle"></i> Aktif</span>
               @elseif($p->status === 'done')
-                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Done</span>
+                @if($p->reviewed_by)
+                  <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Disetujui</span>
+                @else
+                  <span class="badge bg-warning text-dark"><i class="bi bi-clock-history"></i> Menunggu Review</span>
+                @endif
               @endif
             </div>
           </div>
@@ -286,10 +290,10 @@
           <!-- Actions -->
           <div class="col-12 col-md-3">
             <div class="action-btns justify-content-end">
-              @if($p->status === 'done')
+              @if($p->status === 'done' && !$p->reviewed_by)
                 <form action="{{ route('admin.projects.approve', $p) }}" method="POST" style="display: inline;">
                   @csrf
-                  <button type="submit" class="btn btn-sm btn-success" title="Setujui Project" onclick="return confirm('Setujui project ini?')">
+                  <button type="submit" class="btn btn-sm btn-success" title="Setujui Project" onclick="return confirm('Setujui project ini? Semua anggota tim akan menjadi idle dan subtasks menjadi done.')">
                     <i class="bi bi-check-circle-fill"></i>
                     <span>Setujui</span>
                   </button>

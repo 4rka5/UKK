@@ -199,13 +199,19 @@
             <!-- Actions -->
             <div class="col-6 col-md-4 d-flex align-items-center justify-content-end">
               <div class="action-btns">
-                <form action="{{ route('admin.projects.approve', $project) }}" method="POST" style="display: inline;">
-                  @csrf
-                  <button type="submit" class="btn btn-sm btn-success" title="Setujui & Tandai Selesai" onclick="return confirm('Setujui project ini? Semua anggota tim akan menjadi idle.')">
-                    <i class="bi bi-check-circle-fill"></i>
-                    <span>Setujui</span>
-                  </button>
-                </form>
+                @if(!$project->reviewed_by)
+                  <form action="{{ route('admin.projects.approve', $project) }}" method="POST" style="display: inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-success" title="Setujui & Tandai Selesai" onclick="return confirm('Setujui project ini? Semua anggota tim akan menjadi idle dan subtasks menjadi done.')">
+                      <i class="bi bi-check-circle-fill"></i>
+                      <span>Setujui</span>
+                    </button>
+                  </form>
+                @else
+                  <span class="badge bg-success">
+                    <i class="bi bi-check-circle-fill"></i> Disetujui oleh {{ $project->reviewer->fullname ?? 'Admin' }}
+                  </span>
+                @endif
                 <a href="{{ route('admin.projects.report', $project) }}" class="btn btn-sm btn-outline-primary" title="Lihat Laporan">
                   <i class="bi bi-file-earmark-text"></i>
                   <span>Laporan</span>
