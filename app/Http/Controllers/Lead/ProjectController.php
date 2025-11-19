@@ -24,7 +24,6 @@ class ProjectController extends Controller
         // Statistics
         $stats = [
             'total' => Project::where('created_by', Auth::id())->count(),
-            'draft' => Project::where('created_by', Auth::id())->where('status', 'draft')->count(),
             'pending' => Project::where('created_by', Auth::id())->where('status', 'pending')->count(),
             'approved' => Project::where('created_by', Auth::id())->where('status', 'approved')->count(),
             'rejected' => Project::where('created_by', Auth::id())->where('status', 'rejected')->count(),
@@ -34,7 +33,7 @@ class ProjectController extends Controller
     }
 
     /**
-     * Show the form for creating a new project
+     * Show the form for creating a new project (request approval)
      */
     public function create()
     {
@@ -42,7 +41,7 @@ class ProjectController extends Controller
     }
 
     /**
-     * Store a newly created project in storage
+     * Store and submit project for approval (no draft, directly pending)
      */
     public function store(Request $request)
     {
@@ -57,80 +56,7 @@ class ProjectController extends Controller
             'description' => $validated['description'],
             'deadline' => $validated['deadline'],
             'created_by' => Auth::id(),
-            'status' => 'draft',
-        ]);
-
-        return redirect()->route('lead.projects.index')
-            ->with('success', 'Project berhasil dibuat sebagai draft.');
-    }
-
-    /**
-     * Show the form for editing the specified project
-     */
-    public function edit(Project $project)
-    {
-        // Check if user is the owner
-        if ($project->created_by !== Auth::id()) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        // Can only edit if draft or rejected
-        if (!in_array($project->status, ['draft', 'rejected'])) {
-            return redirect()->route('lead.projects.index')
-                ->with('error', 'Hanya project dengan status draft atau rejected yang dapat diedit.');
-        }
-
-        return view('lead.projects.edit', compact('project'));
-    }
-
-    /**
-     * Update the specified project in storage
-     */
-    public function update(Request $request, Project $project)
-    {
-        // Check if user is the owner
-        if ($project->created_by !== Auth::id()) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        // Can only update if draft or rejected
-        if (!in_array($project->status, ['draft', 'rejected'])) {
-            return redirect()->route('lead.projects.index')
-                ->with('error', 'Hanya project dengan status draft atau rejected yang dapat diupdate.');
-        }
-
-        $validated = $request->validate([
-            'project_name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'deadline' => 'required|date|after:today',
-        ]);
-
-        $project->update($validated);
-
-        return redirect()->route('lead.projects.index')
-            ->with('success', 'Project berhasil diupdate.');
-    }
-
-    /**
-     * Submit project for admin approval
-     */
-    public function submitForApproval(Project $project)
-    {
-        // Check if user is the owner
-        if ($project->created_by !== Auth::id()) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        if (!$project->canSubmitForApproval()) {
-            return redirect()->back()
-                ->with('error', 'Project tidak dapat diajukan untuk approval.');
-        }
-
-        $project->update([
-            'status' => 'pending',
-            'reviewed_by' => null,
-            'reviewed_at' => null,
-            'rejection_reason' => null,
+            'status' => 'pending', // Langsung pending, tidak ada draft
         ]);
 
         // Send notification to all admins
@@ -151,27 +77,7 @@ class ProjectController extends Controller
             ->with('success', 'Project berhasil diajukan untuk approval.');
     }
 
-    /**
-     * Remove the specified project from storage
-     */
-    public function destroy(Project $project)
-    {
-        // Check if user is the owner
-        if ($project->created_by !== Auth::id()) {
-            abort(403, 'Unauthorized action.');
-        }
 
-        // Can only delete if draft or rejected
-        if (!in_array($project->status, ['draft', 'rejected'])) {
-            return redirect()->route('lead.projects.index')
-                ->with('error', 'Hanya project dengan status draft atau rejected yang dapat dihapus.');
-        }
-
-        $project->delete();
-
-        return redirect()->route('lead.projects.index')
-            ->with('success', 'Project berhasil dihapus.');
-    }
 
     /**
      * Show project detail

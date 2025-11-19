@@ -63,8 +63,12 @@
 
                     @if($project->status === 'rejected' && $project->rejection_reason)
                         <div class="alert alert-danger">
-                            <strong><i class="bi bi-exclamation-triangle"></i> Alasan Penolakan:</strong>
-                            <p class="mb-0 mt-2">{{ $project->rejection_reason }}</p>
+                            <h6 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Alasan Penolakan</h6>
+                            <p class="mb-0">{{ $project->rejection_reason }}</p>
+                            <hr>
+                            <p class="mb-0 small">
+                                <i class="bi bi-info-circle"></i> Hubungi admin untuk informasi lebih lanjut atau ajukan project baru dengan perbaikan yang diperlukan.
+                            </p>
                         </div>
                     @endif
 
@@ -81,36 +85,6 @@
                     @endif
                 </div>
             </div>
-
-            @if(in_array($project->status, ['draft', 'rejected']))
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0"><i class="bi bi-tools"></i> Aksi</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex gap-2">
-                            <a href="{{ route('lead.projects.edit', $project) }}" class="btn btn-primary">
-                                <i class="bi bi-pencil"></i> Edit Project
-                            </a>
-                            
-                            <form action="{{ route('lead.projects.submit', $project) }}" method="POST" style="display: inline;">
-                                @csrf
-                                <button type="submit" class="btn btn-success" onclick="return confirm('Ajukan project ini untuk approval admin?')">
-                                    <i class="bi bi-send"></i> Ajukan untuk Approval
-                                </button>
-                            </form>
-                            
-                            <form action="{{ route('lead.projects.destroy', $project) }}" method="POST" style="display: inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Yakin hapus project ini?')">
-                                    <i class="bi bi-trash"></i> Hapus
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            @endif
         </div>
 
         <!-- Sidebar -->
@@ -123,18 +97,16 @@
                     <ul class="timeline">
                         <li class="timeline-item">
                             <div class="timeline-marker bg-secondary"></div>
-                            <div class="timeline-content">
-                                <p class="mb-1 small"><strong>Project Dibuat</strong></p>
-                                <p class="mb-0 text-muted small">{{ $project->created_at->format('d M Y H:i') }}</p>
-                            </div>
-                        </li>
-                        
-                        @if($project->status === 'pending')
+                        <div class="timeline-content">
+                            <p class="mb-1 small"><strong>Project Diajukan</strong></p>
+                            <p class="mb-0 text-muted small">{{ $project->created_at->format('d M Y H:i') }}</p>
+                        </div>
+                    </li>                        @if($project->status === 'pending')
                             <li class="timeline-item">
                                 <div class="timeline-marker bg-warning"></div>
                                 <div class="timeline-content">
-                                    <p class="mb-1 small"><strong>Menunggu Review Admin</strong></p>
-                                    <p class="mb-0 text-muted small">{{ $project->updated_at->format('d M Y H:i') }}</p>
+                                    <p class="mb-1 small"><strong>Menunggu Review</strong></p>
+                                    <p class="mb-0 text-muted small">Sedang direview oleh admin...</p>
                                 </div>
                             </li>
                         @endif
@@ -143,7 +115,7 @@
                             <li class="timeline-item">
                                 <div class="timeline-marker bg-success"></div>
                                 <div class="timeline-content">
-                                    <p class="mb-1 small"><strong>Project Disetujui</strong></p>
+                                    <p class="mb-1 small"><strong>Disetujui</strong></p>
                                     <p class="mb-0 text-muted small">{{ $project->reviewed_at->format('d M Y H:i') }}</p>
                                 </div>
                             </li>
@@ -153,7 +125,7 @@
                             <li class="timeline-item">
                                 <div class="timeline-marker bg-danger"></div>
                                 <div class="timeline-content">
-                                    <p class="mb-1 small"><strong>Project Ditolak</strong></p>
+                                    <p class="mb-1 small"><strong>Ditolak</strong></p>
                                     <p class="mb-0 text-muted small">{{ $project->reviewed_at->format('d M Y H:i') }}</p>
                                 </div>
                             </li>
@@ -163,9 +135,19 @@
             </div>
 
             @if($project->status === 'pending')
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> <strong>Status: Menunggu Review</strong>
+                    <p class="mb-0 mt-2 small">Project Anda sedang direview oleh admin. Anda akan menerima notifikasi saat project disetujui atau ditolak.</p>
+                </div>
+            @elseif($project->status === 'approved')
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> <strong>Project Disetujui</strong>
+                    <p class="mb-0 mt-2 small">Selamat! Project Anda telah disetujui. Anda sekarang dapat membuat boards dan cards untuk project ini.</p>
+                </div>
+            @elseif($project->status === 'rejected')
                 <div class="alert alert-warning">
-                    <i class="bi bi-clock-history"></i> <strong>Menunggu Approval</strong>
-                    <p class="mb-0 mt-2 small">Project sedang direview oleh admin. Anda akan menerima notifikasi setelah direview.</p>
+                    <i class="bi bi-exclamation-triangle"></i> <strong>Project Ditolak</strong>
+                    <p class="mb-0 mt-2 small">Project ditolak. Lihat alasan penolakan di atas dan ajukan project baru dengan perbaikan yang diperlukan.</p>
                 </div>
             @endif
         </div>

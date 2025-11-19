@@ -5,8 +5,8 @@
 @section('content')
 <div class="container-fluid">
     <div class="mb-4">
-        <h1 class="h3 mb-0"><i class="bi bi-plus-circle"></i> Buat Project Baru</h1>
-        <p class="text-muted mb-0">Isi form di bawah untuk membuat project baru</p>
+        <h1 class="h3 mb-0"><i class="bi bi-send-plus"></i> Ajukan Project Baru</h1>
+        <p class="text-muted mb-0">Isi form di bawah untuk mengajukan project ke admin</p>
     </div>
 
     <div class="row">
@@ -64,15 +64,15 @@
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle"></i> <strong>Catatan:</strong>
                             <ul class="mb-0 mt-2">
-                                <li>Project akan disimpan sebagai <strong>draft</strong></li>
-                                <li>Anda dapat mengedit project sebelum mengajukan approval</li>
-                                <li>Setelah diajukan, project akan direview oleh admin</li>
+                                <li>Project akan <strong>langsung diajukan</strong> ke admin untuk direview</li>
+                                <li>Anda akan menerima notifikasi saat project disetujui atau ditolak</li>
+                                <li>Pastikan semua informasi sudah benar sebelum submit</li>
                             </ul>
                         </div>
 
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save"></i> Simpan sebagai Draft
+                                <i class="bi bi-send"></i> Ajukan Project
                             </button>
                             <a href="{{ route('lead.projects.index') }}" class="btn btn-outline-secondary">
                                 <i class="bi bi-x-circle"></i> Batal
@@ -91,7 +91,7 @@
                         <li>Gunakan nama project yang jelas dan deskriptif</li>
                         <li>Jelaskan tujuan dan scope project secara detail</li>
                         <li>Pastikan deadline realistis dan dapat dicapai</li>
-                        <li>Setelah approved, Anda dapat membuat boards dan cards</li>
+                        <li>Setelah disetujui, Anda dapat membuat boards dan cards</li>
                     </ul>
                 </div>
             </div>

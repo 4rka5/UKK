@@ -52,10 +52,11 @@ Route::middleware(['auth','role:admin'])->prefix('admin')->name('admin.')->group
 Route::middleware(['auth','role:team_lead'])->prefix('lead')->name('lead.')->group(function () {
     Route::get('/', [LeadDashboardController::class, 'index'])->name('dashboard');
     
-    // Project management for team lead
-    Route::resource('projects', LeadProjectController::class)->except(['show']);
+    // Project management for team lead (only view and create/submit)
+    Route::get('projects', [LeadProjectController::class, 'index'])->name('projects.index');
+    Route::get('projects/create', [LeadProjectController::class, 'create'])->name('projects.create');
+    Route::post('projects', [LeadProjectController::class, 'store'])->name('projects.store');
     Route::get('projects/{project}/detail', [LeadProjectController::class, 'show'])->name('projects.show');
-    Route::post('projects/{project}/submit', [LeadProjectController::class, 'submitForApproval'])->name('projects.submit');
     
     // Card management
     Route::resource('cards', LeadCardController::class)->except(['show']);

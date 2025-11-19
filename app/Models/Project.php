@@ -44,14 +44,6 @@ class Project extends Model
     }
 
     /**
-     * Check if project can be submitted for approval
-     */
-    public function canSubmitForApproval()
-    {
-        return in_array($this->status, ['draft', 'rejected']);
-    }
-
-    /**
      * Check if project is pending approval
      */
     public function isPending()
@@ -65,5 +57,13 @@ class Project extends Model
     public function isApproved()
     {
         return $this->status === 'approved';
+    }
+
+    /**
+     * Check if project is rejected
+     */
+    public function isRejected()
+    {
+        return $this->status === 'rejected';
     }
 }
