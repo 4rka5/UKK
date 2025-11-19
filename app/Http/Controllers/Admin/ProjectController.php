@@ -27,6 +27,11 @@ class ProjectController extends Controller
             });
         }
 
+        // Filter by project status (pending, approved, rejected, etc)
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
         // Filter by deadline status
         if ($request->filled('deadline_status')) {
             switch ($request->deadline_status) {
@@ -44,27 +49,18 @@ class ProjectController extends Controller
             }
         }
 
-        // Filter by project status (active/completed)
-        if ($request->filled('status')) {
-            if ($request->status === 'active') {
-                // Projects with active tasks (todo or in_progress)
-                $query->whereHas('boards', function($boardQuery) {
-                    $boardQuery->whereHas('cards', function($cardQuery) {
-                        $cardQuery->whereIn('status', ['todo', 'in_progress']);
-                    });
-                });
-            } elseif ($request->status === 'completed') {
-                // Projects where all tasks are done
-                $query->whereDoesntHave('boards', function($boardQuery) {
-                    $boardQuery->whereHas('cards', function($cardQuery) {
-                        $cardQuery->whereIn('status', ['todo', 'in_progress']);
-                    });
-                })->whereHas('boards.cards'); // Must have at least one card
-            }
-        }
-
         $projects = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
-        return view('admin.projects.index', compact('projects'));
+        
+        // Statistics
+        $stats = [
+            'total' => Project::count(),
+            'pending' => Project::where('status', 'pending')->count(),
+            'approved' => Project::where('status', 'approved')->count(),
+            'rejected' => Project::where('status', 'rejected')->count(),
+            'active' => Project::where('status', 'active')->count(),
+        ];
+        
+        return view('admin.projects.index', compact('projects', 'stats'));
     }
 
     public function create()
@@ -333,5 +329,82 @@ class ProjectController extends Controller
         ]);
 
         return back()->with('status', 'Override rule berhasil diterapkan. Alasan: ' . $data['reason']);
+    }
+
+    /**
+     * Approve project submission from team lead
+     */
+    public function approve(Project $project)
+    {
+        if ($project->status !== 'pending') {
+            return redirect()->back()
+                ->with('error', 'Hanya project dengan status pending yang dapat diapprove.');
+        }
+
+        $project->update([
+            'status' => 'approved',
+            'reviewed_by' => auth()->id(),
+            'reviewed_at' => now(),
+            'rejection_reason' => null,
+        ]);
+
+        // Send notification to project owner (team lead)
+        \App\Models\Notification::create([
+            'user_id' => $project->created_by,
+            'type' => 'project_approved',
+            'title' => 'Project Disetujui',
+            'message' => 'Project "' . $project->project_name . '" telah disetujui oleh admin.',
+            'related_type' => 'Project',
+            'related_id' => $project->id,
+            'is_read' => false,
+        ]);
+
+        return redirect()->back()
+            ->with('success', 'Project berhasil diapprove.');
+    }
+
+    /**
+     * Reject project submission from team lead
+     */
+    public function reject(Request $request, Project $project)
+    {
+        if ($project->status !== 'pending') {
+            return redirect()->back()
+                ->with('error', 'Hanya project dengan status pending yang dapat direject.');
+        }
+
+        $validated = $request->validate([
+            'rejection_reason' => 'required|string|max:500',
+        ]);
+
+        $project->update([
+            'status' => 'rejected',
+            'reviewed_by' => auth()->id(),
+            'reviewed_at' => now(),
+            'rejection_reason' => $validated['rejection_reason'],
+        ]);
+
+        // Send notification to project owner (team lead)
+        \App\Models\Notification::create([
+            'user_id' => $project->created_by,
+            'type' => 'project_rejected',
+            'title' => 'Project Ditolak',
+            'message' => 'Project "' . $project->project_name . '" ditolak. Alasan: ' . $validated['rejection_reason'],
+            'related_type' => 'Project',
+            'related_id' => $project->id,
+            'is_read' => false,
+        ]);
+
+        return redirect()->back()
+            ->with('success', 'Project berhasil direject.');
+    }
+
+    /**
+     * Show project detail for review
+     */
+    public function detail(Project $project)
+    {
+        $project->load(['owner', 'reviewer', 'members']);
+        return view('admin.projects.detail', compact('project'));
     }
 }

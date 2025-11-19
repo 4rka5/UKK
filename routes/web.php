@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Lead\DashboardController as LeadDashboardController;
 use App\Http\Controllers\Lead\CardController as LeadCardController;
+use App\Http\Controllers\Lead\ProjectController as LeadProjectController;
 use App\Http\Controllers\Member\DashboardController as MemberDashboardController;
 use App\Http\Controllers\Member\CardController as MemberCardController;
 use App\Http\Controllers\Member\DeveloperController;
@@ -27,6 +28,11 @@ Route::middleware(['auth','role:admin'])->prefix('admin')->name('admin.')->group
     Route::resource('users', UserController::class)->except(['show']);
     Route::resource('projects', ProjectController::class)->except(['show']);
     
+    // Project approval routes
+    Route::get('projects/{project}/detail', [ProjectController::class, 'detail'])->name('projects.detail');
+    Route::post('projects/{project}/approve', [ProjectController::class, 'approve'])->name('projects.approve');
+    Route::post('projects/{project}/reject', [ProjectController::class, 'reject'])->name('projects.reject');
+    
     // Project members management
     Route::get('projects/{project}/members', [ProjectController::class, 'members'])->name('projects.members');
     Route::post('projects/{project}/members', [ProjectController::class, 'addMember'])->name('projects.addMember');
@@ -45,6 +51,13 @@ Route::middleware(['auth','role:admin'])->prefix('admin')->name('admin.')->group
 
 Route::middleware(['auth','role:team_lead'])->prefix('lead')->name('lead.')->group(function () {
     Route::get('/', [LeadDashboardController::class, 'index'])->name('dashboard');
+    
+    // Project management for team lead
+    Route::resource('projects', LeadProjectController::class)->except(['show']);
+    Route::get('projects/{project}/detail', [LeadProjectController::class, 'show'])->name('projects.show');
+    Route::post('projects/{project}/submit', [LeadProjectController::class, 'submitForApproval'])->name('projects.submit');
+    
+    // Card management
     Route::resource('cards', LeadCardController::class)->except(['show']);
     Route::patch('cards/{card}/move', [LeadCardController::class, 'move'])->name('cards.move');
     
