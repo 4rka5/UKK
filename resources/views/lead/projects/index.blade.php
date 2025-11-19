@@ -75,12 +75,12 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="text-muted mb-1 small">Disetujui</p>
-                            <h3 class="mb-0 text-success">{{ $stats['approved'] }}</h3>
-                            <small class="text-muted">Siap diajukan</small>
+                            <p class="text-muted mb-1 small">Aktif</p>
+                            <h3 class="mb-0 text-primary">{{ $stats['active'] }}</h3>
+                            <small class="text-muted">Sedang dikerjakan</small>
                         </div>
-                        <div class="bg-success bg-opacity-10 p-3 rounded">
-                            <i class="bi bi-check-circle-fill text-success fs-4"></i>
+                        <div class="bg-primary bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-play-circle-fill text-primary fs-4"></i>
                         </div>
                     </div>
                 </div>
@@ -91,12 +91,12 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="text-muted mb-1 small">Aktif</p>
-                            <h3 class="mb-0 text-primary">{{ $stats['active'] }}</h3>
-                            <small class="text-muted">Sedang dikerjakan</small>
+                            <p class="text-muted mb-1 small">Done</p>
+                            <h3 class="mb-0 text-success">{{ $stats['done'] }}</h3>
+                            <small class="text-muted">Sudah selesai</small>
                         </div>
-                        <div class="bg-primary bg-opacity-10 p-3 rounded">
-                            <i class="bi bi-play-circle-fill text-primary fs-4"></i>
+                        <div class="bg-success bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-check-circle-fill text-success fs-4"></i>
                         </div>
                     </div>
                 </div>
@@ -149,10 +149,10 @@
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        @if($project->status === 'approved')
-                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Disetujui</span>
-                                        @elseif($project->status === 'active')
+                                        @if($project->status === 'active')
                                             <span class="badge bg-primary"><i class="bi bi-play-circle"></i> Aktif</span>
+                                        @elseif($project->status === 'done')
+                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Done</span>
                                         @endif
                                     </td>
                                     <td>
@@ -175,11 +175,11 @@
                                                 <i class="bi bi-eye"></i>
                                             </a>
                                             
-                                            @if($project->status === 'approved')
+                                            @if($project->status === 'active')
                                                 <form action="{{ route('lead.projects.submitProject', $project) }}" method="POST" style="display: inline;">
                                                     @csrf
-                                                    <button type="submit" class="btn btn-outline-warning btn-sm" title="Ajukan Project" onclick="return confirm('Ajukan project ini untuk dikerjakan?')">
-                                                        <i class="bi bi-send-check"></i>
+                                                    <button type="submit" class="btn btn-outline-success btn-sm" title="Tandai Selesai" onclick="return confirm('Tandai project ini sebagai selesai?')">
+                                                        <i class="bi bi-check-circle"></i>
                                                     </button>
                                                 </form>
                                             @endif

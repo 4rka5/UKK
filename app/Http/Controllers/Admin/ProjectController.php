@@ -53,19 +53,19 @@ class ProjectController extends Controller
         
         // Statistics - hanya 2 status
         $stats = [
-            'approved' => Project::where('status', 'approved')->count(),
             'active' => Project::where('status', 'active')->count(),
+            'done' => Project::where('status', 'done')->count(),
         ];
         
         return view('admin.projects.index', compact('projects', 'stats'));
     }
 
     /**
-     * Show submitted projects (projects with status 'active')
+     * Show submitted projects (projects with status 'done')
      */
     public function submitted(Request $request)
     {
-        $query = Project::where('status', 'active')
+        $query = Project::where('status', 'done')
             ->with(['owner', 'members']);
 
         // Search by project name or owner name
@@ -143,13 +143,13 @@ class ProjectController extends Controller
             return back()->withInput()->with('error', 'Owner sudah otomatis menjadi Team Lead, tidak perlu ditambahkan lagi di member!');
         }
         
-        // Buat project baru dengan status approved
+        // Buat project baru dengan status active
         $project = Project::create([
             'project_name' => $data['project_name'],
             'description' => $data['description'] ?? null,
             'deadline' => $data['deadline'] ?? null,
             'created_by' => $data['created_by'],
-            'status' => 'approved',
+            'status' => 'active',
         ]);
         
         // Ubah status owner project menjadi 'idle' otomatis
@@ -432,17 +432,30 @@ class ProjectController extends Controller
      */
     public function approve(Project $project)
     {
-        // Approve hanya untuk project baru yang diajukan admin (bukan dari team lead completion)
-        // Karena team lead tidak bisa create project, method ini untuk admin create project
+        // Setujui project yang done, ubah ke active untuk dikerjakan lagi atau tetap done
+        if ($project->status !== 'done') {
+            return redirect()->back()
+                ->with('error', 'Hanya project dengan status done yang dapat disetujui.');
+        }
         
         $project->update([
-            'status' => 'active',
             'reviewed_by' => auth()->id(),
             'reviewed_at' => now(),
         ]);
 
+        // Send notification to team lead
+        \App\Models\Notification::create([
+            'user_id' => $project->created_by,
+            'type' => 'project_approved',
+            'title' => 'Project Disetujui',
+            'message' => 'Project "' . $project->project_name . '" telah disetujui oleh admin.',
+            'related_type' => 'Project',
+            'related_id' => $project->id,
+            'is_read' => false,
+        ]);
+
         return redirect()->back()
-            ->with('success', 'Project berhasil diaktifkan.');
+            ->with('success', 'Project berhasil disetujui.');
     }
 
     /**

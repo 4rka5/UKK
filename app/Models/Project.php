@@ -44,18 +44,18 @@ class Project extends Model
     }
 
     /**
-     * Check if project is approved (disetujui)
-     */
-    public function isApproved()
-    {
-        return $this->status === 'approved';
-    }
-
-    /**
      * Check if project is active (sedang dikerjakan)
      */
     public function isActive()
     {
         return $this->status === 'active';
+    }
+
+    /**
+     * Check if project is done (selesai)
+     */
+    public function isDone()
+    {
+        return $this->status === 'done';
     }
 }

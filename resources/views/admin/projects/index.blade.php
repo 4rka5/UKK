@@ -157,20 +157,6 @@
   <div class="col-6">
     <div class="stat-card bg-white">
       <div class="d-flex align-items-center gap-3">
-        <div class="stat-icon bg-success bg-opacity-10 text-success">
-          <i class="bi bi-check-circle-fill"></i>
-        </div>
-        <div>
-          <div class="text-muted small">Disetujui</div>
-          <div class="h4 mb-0 fw-bold">{{ $stats['approved'] }}</div>
-          <small class="text-muted">Belum diajukan</small>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col-6">
-    <div class="stat-card bg-white">
-      <div class="d-flex align-items-center gap-3">
         <div class="stat-icon bg-primary bg-opacity-10 text-primary">
           <i class="bi bi-play-circle-fill"></i>
         </div>
@@ -178,6 +164,20 @@
           <div class="text-muted small">Aktif</div>
           <div class="h4 mb-0 fw-bold">{{ $stats['active'] }}</div>
           <small class="text-muted">Sedang dikerjakan</small>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="stat-card bg-white">
+      <div class="d-flex align-items-center gap-3">
+        <div class="stat-icon bg-success bg-opacity-10 text-success">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <div>
+          <div class="text-muted small">Done</div>
+          <div class="h4 mb-0 fw-bold">{{ $stats['done'] }}</div>
+          <small class="text-muted">Sudah selesai</small>
         </div>
       </div>
     </div>
@@ -251,26 +251,28 @@
             </div>
           </div>
 
-          <!-- Deadline -->
-          <div class="col-6 col-md-3">
+          <!-- Deadline & Status -->
+          <div class="col-6 col-md-2">
             <small class="text-muted d-block mb-1">Deadline</small>
             @if($p->deadline)
               @php
                 $deadline = \Carbon\Carbon::parse($p->deadline);
                 $isOverdue = $deadline->isPast();
-                $daysLeft = (int) now()->diffInDays($deadline, false);
               @endphp
-              <span class="badge {{ $isOverdue ? 'bg-danger' : ($daysLeft <= 7 ? 'bg-warning text-dark' : 'bg-success') }}">
+              <span class="badge {{ $isOverdue ? 'bg-danger' : 'bg-info' }}">
                 <i class="bi bi-calendar-event me-1"></i>{{ $deadline->format('d M Y') }}
               </span>
-              @if(!$isOverdue && $daysLeft >= 0)
-                <small class="text-muted d-block mt-1">{{ abs($daysLeft) }} hari lagi</small>
-              @elseif($isOverdue)
-                <small class="text-danger d-block mt-1">Terlambat {{ abs($daysLeft) }} hari</small>
-              @endif
             @else
-              <span class="badge bg-secondary">Tidak ada deadline</span>
+              <span class="badge bg-secondary">No deadline</span>
             @endif
+            <div class="mt-2">
+              <small class="text-muted d-block mb-1">Status</small>
+              @if($p->status === 'active')
+                <span class="badge bg-primary"><i class="bi bi-play-circle"></i> Aktif</span>
+              @elseif($p->status === 'done')
+                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Done</span>
+              @endif
+            </div>
           </div>
 
           <!-- Members Count -->
@@ -282,20 +284,29 @@
           </div>
 
           <!-- Actions -->
-          <div class="col-12 col-md-2">
+          <div class="col-12 col-md-3">
             <div class="action-btns justify-content-end">
+              @if($p->status === 'done')
+                <form action="{{ route('admin.projects.approve', $p) }}" method="POST" style="display: inline;">
+                  @csrf
+                  <button type="submit" class="btn btn-sm btn-success" title="Setujui Project" onclick="return confirm('Setujui project ini?')">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Setujui</span>
+                  </button>
+                </form>
+              @endif
+              <a href="{{ route('admin.projects.report', $p) }}" class="btn btn-sm btn-outline-primary" title="Lihat Laporan">
+                <i class="bi bi-file-earmark-text"></i>
+                <span>Laporan</span>
+              </a>
               <a href="{{ route('admin.projects.members', $p) }}" class="btn btn-sm btn-outline-info" title="Kelola Anggota">
                 <i class="bi bi-people-fill"></i>
-                <span class="d-none d-md-inline ms-1">Anggota</span>
+                <span class="d-none d-lg-inline">Anggota</span>
               </a>
-              <a href="{{ route('admin.projects.edit',$p) }}" class="btn btn-sm btn-outline-primary" title="Edit Project">
+              <a href="{{ route('admin.projects.edit',$p) }}" class="btn btn-sm btn-outline-secondary" title="Edit Project">
                 <i class="bi bi-pencil-fill"></i>
-                <span class="d-none d-md-inline ms-1">Edit</span>
+                <span class="d-none d-lg-inline">Edit</span>
               </a>
-              <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteProject({{ $p->id }}, '{{ addslashes($p->project_name) }}')" title="Hapus Project">
-                <i class="bi bi-trash-fill"></i>
-                <span class="d-none d-md-inline ms-1">Hapus</span>
-              </button>
             </div>
           </div>
         </div>

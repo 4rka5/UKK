@@ -24,15 +24,15 @@ class ProjectController extends Controller
 
         // Statistics - hanya 2 status
         $stats = [
-            'approved' => Project::where('created_by', Auth::id())->where('status', 'approved')->count(),
             'active' => Project::where('created_by', Auth::id())->where('status', 'active')->count(),
+            'done' => Project::where('created_by', Auth::id())->where('status', 'done')->count(),
         ];
 
         return view('lead.projects.index', compact('projects', 'stats'));
     }
 
     /**
-     * Submit project to admin for review (change from approved to active)
+     * Submit project to admin for review (change from active to done)
      */
     public function submitProject(Project $project)
     {
@@ -41,14 +41,14 @@ class ProjectController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // Can only submit if status is approved
-        if ($project->status !== 'approved') {
+        // Can only submit if status is active
+        if ($project->status !== 'active') {
             return redirect()->back()
-                ->with('error', 'Hanya project dengan status "Disetujui" yang dapat diajukan.');
+                ->with('error', 'Hanya project dengan status "Aktif" yang dapat diajukan.');
         }
 
         $project->update([
-            'status' => 'active',
+            'status' => 'done',
             'reviewed_at' => now(),
         ]);
 
@@ -58,8 +58,8 @@ class ProjectController extends Controller
             Notification::create([
                 'user_id' => $admin->id,
                 'type' => 'project_submitted',
-                'title' => 'Project Diajukan oleh Team Lead',
-                'message' => Auth::user()->fullname . ' mengajukan project "' . $project->project_name . '" untuk ditinjau.',
+                'title' => 'Project Selesai - Menunggu Review',
+                'message' => Auth::user()->fullname . ' telah menyelesaikan project "' . $project->project_name . '" dan mengajukan untuk direview.',
                 'related_type' => 'Project',
                 'related_id' => $project->id,
                 'is_read' => false,
@@ -67,7 +67,7 @@ class ProjectController extends Controller
         }
 
         return redirect()->route('lead.projects.index')
-            ->with('success', 'Project berhasil diajukan kepada admin.');
+            ->with('success', 'Project berhasil diajukan sebagai selesai.');
     }
 
 
