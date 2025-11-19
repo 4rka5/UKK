@@ -143,12 +143,13 @@ class ProjectController extends Controller
             return back()->withInput()->with('error', 'Owner sudah otomatis menjadi Team Lead, tidak perlu ditambahkan lagi di member!');
         }
         
-        // Buat project baru
+        // Buat project baru dengan status approved
         $project = Project::create([
             'project_name' => $data['project_name'],
             'description' => $data['description'] ?? null,
             'deadline' => $data['deadline'] ?? null,
             'created_by' => $data['created_by'],
+            'status' => 'approved',
         ]);
         
         // Ubah status owner project menjadi 'idle' otomatis
