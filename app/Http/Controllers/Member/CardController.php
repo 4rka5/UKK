@@ -53,7 +53,7 @@ class CardController extends Controller
             abort(403, 'Anda tidak memiliki akses ke card ini. Hanya tugas yang di-assign kepada Anda yang dapat diakses.');
         }
 
-                // Load relationships
+        // Load relationships
         $card->load([
             'project', 
             'creator', 
@@ -61,8 +61,11 @@ class CardController extends Controller
             'subtasks', 
             'comments.user'
         ]);
+        
+        // Check if project is done (read-only mode)
+        $projectDone = $card->project && $card->project->status === 'done';
 
-        return view('member.cards.show', compact('card'));
+        return view('member.cards.show', compact('card', 'projectDone'));
     }
 
     /**
@@ -83,6 +86,11 @@ class CardController extends Controller
     public function startTimer(ManagementProjectCard $card)
     {
         $userId = Auth::id();
+        
+        // Cek jika project sudah done
+        if ($card->project && $card->project->status === 'done') {
+            return back()->with('error', 'Project sudah selesai dan disetujui admin. Tugas tidak dapat dikerjakan lagi.');
+        }
         
         // Cek jika tugas sudah selesai
         if ($card->status === 'done') {
@@ -134,6 +142,11 @@ class CardController extends Controller
     {
         $userId = Auth::id();
         
+        // Cek jika project sudah done
+        if ($card->project && $card->project->status === 'done') {
+            return back()->with('error', 'Project sudah selesai. Timer tidak dapat diubah.');
+        }
+        
         // Cek jika tugas sudah selesai
         if ($card->status === 'done') {
             return back()->with('error', 'Tugas ini sudah selesai. Timer tidak dapat di-pause.');
@@ -172,6 +185,11 @@ class CardController extends Controller
     public function stopTimer(ManagementProjectCard $card)
     {
         $userId = Auth::id();
+        
+        // Cek jika project sudah done
+        if ($card->project && $card->project->status === 'done') {
+            return back()->with('error', 'Project sudah selesai. Timer tidak dapat diubah.');
+        }
         
         // Cek jika tugas sudah selesai
         if ($card->status === 'done') {
@@ -261,6 +279,11 @@ class CardController extends Controller
     public function requestExtension(Request $request, ManagementProjectCard $card)
     {
         $userId = Auth::id();
+        
+        // Cek jika project sudah done
+        if ($card->project && $card->project->status === 'done') {
+            return back()->with('error', 'Project sudah selesai. Tidak dapat mengajukan perpanjangan.');
+        }
         
         $request->validate([
             'extension_reason' => ['required', 'string', 'max:500']
@@ -367,6 +390,14 @@ class CardController extends Controller
             ], 403);
         }
         
+        // Cek jika project sudah done
+        if ($card->project && $card->project->status === 'done') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Project sudah selesai. Tidak dapat menambah subtask.'
+            ], 403);
+        }
+        
         $request->validate([
             'subtask_title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
@@ -404,6 +435,14 @@ class CardController extends Controller
             ], 403);
         }
         
+        // Cek jika project sudah done
+        if ($card->project && $card->project->status === 'done') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Project sudah selesai. Tidak dapat mengubah subtask.'
+            ], 403);
+        }
+        
         $request->validate([
             'status' => 'required|in:todo,in_progress,done'
         ]);
@@ -429,6 +468,14 @@ class CardController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Anda tidak memiliki akses ke card ini.'
+            ], 403);
+        }
+        
+        // Cek jika project sudah done
+        if ($card->project && $card->project->status === 'done') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Project sudah selesai. Tidak dapat menghapus subtask.'
             ], 403);
         }
         

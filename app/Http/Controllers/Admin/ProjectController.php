@@ -452,6 +452,13 @@ class ProjectController extends Controller
             }
         }
 
+        // Set semua subtasks dari cards project ini menjadi done
+        $cards = \App\Models\ManagementProjectCard::where('project_id', $project->id)->get();
+        foreach ($cards as $card) {
+            \App\Models\ManagementProjectSubtask::where('card_id', $card->id)
+                ->update(['status' => 'done']);
+        }
+
         // Send notification to team lead
         \App\Models\Notification::create([
             'user_id' => $project->created_by,
@@ -470,7 +477,7 @@ class ProjectController extends Controller
                     'user_id' => $member->user_id,
                     'type' => 'project_approved',
                     'title' => 'Project Selesai - Status Idle',
-                    'message' => 'Project "' . $project->project_name . '" telah selesai dan disetujui admin. Status Anda kembali idle.',
+                    'message' => 'Project "' . $project->project_name . '" telah selesai dan disetujui admin. Status Anda kembali idle dan semua tugas telah diselesaikan.',
                     'related_type' => 'Project',
                     'related_id' => $project->id,
                     'is_read' => false,
@@ -479,7 +486,7 @@ class ProjectController extends Controller
         }
 
         return redirect()->back()
-            ->with('success', 'Project berhasil disetujui. Semua anggota tim sekarang idle.');
+            ->with('success', 'Project berhasil disetujui. Semua anggota tim sekarang idle dan semua subtasks diselesaikan.');
     }
 
     /**

@@ -17,6 +17,24 @@
   </a>
 </div>
 
+<!-- Project Completed Alert -->
+@if($projectDone)
+<div class="detail-card">
+  <div class="alert alert-warning border-warning mb-0">
+    <div class="d-flex align-items-center">
+      <div class="me-3 fs-2">🔒</div>
+      <div class="flex-grow-1">
+        <h5 class="mb-2">⚠️ Project Telah Selesai</h5>
+        <p class="mb-0">
+          Project ini telah diajukan oleh Team Lead dan sedang menunggu persetujuan admin, atau sudah disetujui oleh admin. 
+          Semua data tugas bersifat <strong>read-only</strong> dan tidak dapat dimodifikasi.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+@endif
+
 <!-- Card Header -->
 <div class="detail-card">
   <div class="detail-header">
@@ -111,7 +129,7 @@
   $totalSeconds = $userAssignment ? $userAssignment->pivot->total_work_seconds : 0;
 @endphp
 
-@if($card->status !== 'done')
+@if($card->status !== 'done' && !$projectDone)
 <div class="detail-card">
   <h5 class="mb-3">⏱️ Timer Pekerjaan</h5>
   
@@ -218,6 +236,33 @@
           3. Klik "Selesai" jika sudah selesai mengerjakan<br>
           <em>* Waktu akan otomatis tercatat di Actual Hours</em>
         </small>
+      </div>
+    </div>
+  </div>
+</div>
+@elseif($projectDone)
+<div class="detail-card">
+  <div class="alert alert-secondary mb-0">
+    <h5 class="mb-3">⏱️ Timer Pekerjaan - Project Selesai</h5>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="text-center p-4 bg-light rounded border">
+          <div class="display-4 fw-bold font-monospace text-muted">
+            @php
+              $hours = floor($totalSeconds / 3600);
+              $minutes = floor(($totalSeconds % 3600) / 60);
+              $seconds = $totalSeconds % 60;
+            @endphp
+            {{ sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds) }}
+          </div>
+          <small class="text-muted d-block mt-2">Total Waktu Kerja</small>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="alert alert-info mb-0">
+          <p class="mb-0"><strong>ℹ️ Project sudah selesai</strong><br>
+          Timer dan semua fitur pekerjaan tidak dapat digunakan karena project telah diajukan/disetujui.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -355,7 +400,7 @@ window.addEventListener('beforeunload', function() {
 @endif
 
 <!-- Role-Specific Actions -->
-@if(!in_array($card->status, ['review', 'done']) && auth()->user()->role === 'developer')
+@if(!in_array($card->status, ['review', 'done']) && auth()->user()->role === 'developer' && !$projectDone)
   <!-- Developer Actions - Unified Form -->
   <div class="detail-card">
     <h5 class="mb-3">💻 Developer Actions</h5>
@@ -489,7 +534,7 @@ window.addEventListener('beforeunload', function() {
   </div>
 @endif
 
-@if(!in_array($card->status, ['review', 'done']) && auth()->user()->role === 'designer')
+@if(!in_array($card->status, ['review', 'done']) && auth()->user()->role === 'designer' && !$projectDone)
   <!-- Designer Actions - Unified Form -->
   <div class="detail-card">
     <h5 class="mb-3">🎨 Designer Actions</h5>
@@ -599,6 +644,7 @@ window.addEventListener('beforeunload', function() {
   @endif
   
   <!-- Add Comment Form -->
+  @if(!$projectDone)
   <div class="border rounded p-3 bg-light">
     <form method="POST" action="{{ route('member.cards.comment', $card) }}">
       @csrf
@@ -613,18 +659,26 @@ window.addEventListener('beforeunload', function() {
       </div>
     </form>
   </div>
+  @else
+  <div class="alert alert-secondary mb-0">
+    <small class="text-muted">⚠️ Komentar tidak dapat ditambahkan karena project sudah selesai.</small>
+  </div>
+  @endif
 </div>
 
 <!-- Subtasks Section -->
 <div class="detail-card">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h5 class="mb-0">✓ Subtasks ({{ $card->subtasks->count() }})</h5>
+    @if(!$projectDone)
     <button type="button" class="btn btn-sm btn-primary" onclick="showAddSubtaskForm()">
       <i class="bi bi-plus-circle"></i> Tambah Subtask
     </button>
+    @endif
   </div>
 
   <!-- Add Subtask Form (hidden by default) -->
+  @if(!$projectDone)
   <div id="addSubtaskForm" class="border rounded p-3 bg-light mb-3" style="display: none;">
     <form onsubmit="addSubtask(event)">
       <div class="mb-2">
@@ -647,6 +701,7 @@ window.addEventListener('beforeunload', function() {
       </div>
     </form>
   </div>
+  @endif
 
   <!-- Subtasks List -->
   @if($card->subtasks && $card->subtasks->count() > 0)
@@ -656,11 +711,24 @@ window.addEventListener('beforeunload', function() {
           <div class="d-flex justify-content-between align-items-start">
             <div class="flex-grow-1">
               <div class="d-flex align-items-center gap-2 mb-1">
+                @if(!$projectDone)
                 <select class="form-select form-select-sm" style="width: auto;" onchange="updateSubtaskStatus({{ $subtask->id }}, this.value)">
                   <option value="todo" {{ $subtask->status === 'todo' ? 'selected' : '' }}>📋 Todo</option>
                   <option value="in_progress" {{ $subtask->status === 'in_progress' ? 'selected' : '' }}>🔄 In Progress</option>
                   <option value="done" {{ $subtask->status === 'done' ? 'selected' : '' }}>✅ Done</option>
                 </select>
+                @else
+                <span class="badge 
+                  @if($subtask->status === 'done') bg-success
+                  @elseif($subtask->status === 'in_progress') bg-primary
+                  @else bg-secondary
+                  @endif">
+                  @if($subtask->status === 'done') ✅ Done
+                  @elseif($subtask->status === 'in_progress') 🔄 In Progress
+                  @else 📋 Todo
+                  @endif
+                </span>
+                @endif
                 <strong class="{{ $subtask->status === 'done' ? 'text-decoration-line-through text-muted' : '' }}">
                   {{ $subtask->subtask_title }}
                 </strong>
@@ -672,21 +740,24 @@ window.addEventListener('beforeunload', function() {
                 <small class="text-muted">⏱️ {{ $subtask->estimated_hours }} jam</small>
               @endif
             </div>
+            @if(!$projectDone)
             <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteSubtask({{ $subtask->id }})" title="Hapus subtask">
               <i class="bi bi-trash"></i>
             </button>
+            @endif
           </div>
         </div>
       @endforeach
     </div>
   @else
     <div class="alert alert-light">
-      <small class="text-muted">Belum ada subtask. Klik tombol "Tambah Subtask" untuk menambahkan.</small>
+      <small class="text-muted">Belum ada subtask.{{ !$projectDone ? ' Klik tombol "Tambah Subtask" untuk menambahkan.' : '' }}</small>
     </div>
   @endif
 </div>
 
 <!-- Extension Request Modal -->
+@if(!$projectDone)
 <div class="modal fade" id="extensionModal" tabindex="-1" aria-labelledby="extensionModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -716,6 +787,7 @@ window.addEventListener('beforeunload', function() {
     </div>
   </div>
 </div>
+@endif
 
 <script>
 // Subtask Management Functions
