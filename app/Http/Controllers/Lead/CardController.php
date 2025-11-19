@@ -76,7 +76,14 @@ class CardController extends Controller
                 ->whereHas('members', function($q) use ($leadId) {
                     $q->where('user_id', $leadId)->where('role', 'team_lead');
                 })
+                ->where('status', '!=', 'done') // Tidak bisa create card jika project done
                 ->get();
+        }
+        
+        // Cek apakah ada project yang aktif
+        if ($projects->count() === 0 && auth()->user()->role !== 'admin') {
+            return redirect()->route('lead.cards.index')
+                ->with('error', 'Tidak dapat menambah card. Project Anda sudah selesai atau belum ada project aktif.');
         }
         
         // Set default project jika hanya punya 1 project
@@ -112,6 +119,12 @@ class CardController extends Controller
             'assigned_users.*' => ['exists:users,id'],
             'assignment_status' => ['nullable','in:assigned,in_progress,completed'],
         ]);
+        
+        // Cek apakah project sudah done
+        $project = Project::find($request->project_id);
+        if ($project && $project->status === 'done') {
+            return back()->withInput()->with('error', 'Tidak dapat menambah card. Project sudah selesai.');
+        }
         
         // Validasi: User yang di-assign harus member dari project
         if ($request->filled('assigned_users')) {

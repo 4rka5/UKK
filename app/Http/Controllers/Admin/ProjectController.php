@@ -428,11 +428,11 @@ class ProjectController extends Controller
     }
 
     /**
-     * Approve project submission from team lead (activate project)
+     * Approve/Mark project as completed (done stays done, set all members to idle)
      */
     public function approve(Project $project)
     {
-        // Setujui project yang done, ubah ke active untuk dikerjakan lagi atau tetap done
+        // Setujui project yang done
         if ($project->status !== 'done') {
             return redirect()->back()
                 ->with('error', 'Hanya project dengan status done yang dapat disetujui.');
@@ -443,19 +443,43 @@ class ProjectController extends Controller
             'reviewed_at' => now(),
         ]);
 
+        // Set semua member project (termasuk team lead) menjadi idle
+        $projectMembers = \App\Models\ProjectMember::where('project_id', $project->id)->get();
+        foreach ($projectMembers as $member) {
+            $user = User::find($member->user_id);
+            if ($user) {
+                $user->update(['status' => 'idle']);
+            }
+        }
+
         // Send notification to team lead
         \App\Models\Notification::create([
             'user_id' => $project->created_by,
             'type' => 'project_approved',
-            'title' => 'Project Disetujui',
-            'message' => 'Project "' . $project->project_name . '" telah disetujui oleh admin.',
+            'title' => 'Project Disetujui - Status Idle',
+            'message' => 'Project "' . $project->project_name . '" telah disetujui oleh admin. Status Anda dan semua anggota tim kembali idle.',
             'related_type' => 'Project',
             'related_id' => $project->id,
             'is_read' => false,
         ]);
 
+        // Send notification to all members
+        foreach ($projectMembers as $member) {
+            if ($member->user_id !== $project->created_by) {
+                \App\Models\Notification::create([
+                    'user_id' => $member->user_id,
+                    'type' => 'project_approved',
+                    'title' => 'Project Selesai - Status Idle',
+                    'message' => 'Project "' . $project->project_name . '" telah selesai dan disetujui admin. Status Anda kembali idle.',
+                    'related_type' => 'Project',
+                    'related_id' => $project->id,
+                    'is_read' => false,
+                ]);
+            }
+        }
+
         return redirect()->back()
-            ->with('success', 'Project berhasil disetujui.');
+            ->with('success', 'Project berhasil disetujui. Semua anggota tim sekarang idle.');
     }
 
     /**

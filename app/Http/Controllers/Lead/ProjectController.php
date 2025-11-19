@@ -32,7 +32,7 @@ class ProjectController extends Controller
     }
 
     /**
-     * Submit project to admin for review (change from active to done)
+     * Submit project to admin for approval (change from active to done for review)
      */
     public function submitProject(Project $project)
     {
@@ -58,8 +58,8 @@ class ProjectController extends Controller
             Notification::create([
                 'user_id' => $admin->id,
                 'type' => 'project_submitted',
-                'title' => 'Project Selesai - Menunggu Review',
-                'message' => Auth::user()->fullname . ' telah menyelesaikan project "' . $project->project_name . '" dan mengajukan untuk direview.',
+                'title' => 'Project Perlu Review',
+                'message' => Auth::user()->fullname . ' mengajukan project "' . $project->project_name . '" untuk direview dan disetujui.',
                 'related_type' => 'Project',
                 'related_id' => $project->id,
                 'is_read' => false,
@@ -67,7 +67,7 @@ class ProjectController extends Controller
         }
 
         return redirect()->route('lead.projects.index')
-            ->with('success', 'Project berhasil diajukan sebagai selesai.');
+            ->with('success', 'Project berhasil diajukan. Menunggu persetujuan admin.');
     }
 
 

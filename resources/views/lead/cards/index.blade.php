@@ -199,9 +199,21 @@
       Menampilkan {{ $cards->firstItem() ?? 0 }} - {{ $cards->lastItem() ?? 0 }} dari {{ $cards->total() }} cards
     </small>
   </div>
-  <a href="{{ route('lead.cards.create') }}" class="btn btn-primary btn-sm">
-    <i class="bi bi-plus-circle"></i> Tambah Card
-  </a>
+  @php
+    // Cek apakah ada project yang active (tidak done)
+    $hasActiveProject = \App\Models\Project::whereHas('members', function($q) {
+        $q->where('user_id', auth()->id())->where('role', 'team_lead');
+    })->where('status', '!=', 'done')->exists();
+  @endphp
+  @if(auth()->user()->role === 'admin' || $hasActiveProject)
+    <a href="{{ route('lead.cards.create') }}" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-circle"></i> Tambah Card
+    </a>
+  @else
+    <button class="btn btn-secondary btn-sm" disabled title="Project sudah selesai">
+      <i class="bi bi-plus-circle"></i> Tambah Card
+    </button>
+  @endif
 </div>
 
 <div class="row g-3">

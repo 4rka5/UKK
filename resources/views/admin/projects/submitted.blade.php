@@ -100,7 +100,7 @@
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
   <div>
     <h3 class="mb-1">📋 Project Diajukan</h3>
-    <p class="text-muted mb-0 small">Daftar project yang diajukan oleh Team Lead untuk dikerjakan</p>
+    <p class="text-muted mb-0 small">Daftar project yang diajukan Team Lead untuk direview dan disetujui</p>
   </div>
 </div>
 
@@ -199,6 +199,17 @@
             <!-- Actions -->
             <div class="col-6 col-md-4 d-flex align-items-center justify-content-end">
               <div class="action-btns">
+                <form action="{{ route('admin.projects.approve', $project) }}" method="POST" style="display: inline;">
+                  @csrf
+                  <button type="submit" class="btn btn-sm btn-success" title="Setujui & Tandai Selesai" onclick="return confirm('Setujui project ini? Semua anggota tim akan menjadi idle.')">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Setujui</span>
+                  </button>
+                </form>
+                <a href="{{ route('admin.projects.report', $project) }}" class="btn btn-sm btn-outline-primary" title="Lihat Laporan">
+                  <i class="bi bi-file-earmark-text"></i>
+                  <span>Laporan</span>
+                </a>
                 <a href="{{ route('admin.projects.members', $project) }}" class="btn btn-sm btn-outline-info" title="Lihat Anggota">
                   <i class="bi bi-people-fill"></i>
                   <span>Anggota</span>
@@ -206,10 +217,6 @@
                 <a href="{{ route('admin.projects.edit', $project) }}" class="btn btn-sm btn-outline-secondary" title="Edit Project">
                   <i class="bi bi-pencil-square"></i>
                   <span>Edit</span>
-                </a>
-                <a href="{{ route('admin.projects.report', $project) }}" class="btn btn-sm btn-outline-primary" title="Lihat Laporan">
-                  <i class="bi bi-file-earmark-text"></i>
-                  <span>Laporan</span>
                 </a>
               </div>
             </div>

@@ -51,7 +51,7 @@
 
 <div class="mb-4">
   <h3 class="mb-1">📂 Project Saya</h3>
-  <p class="text-muted mb-0 small">Kelola dan ajukan project yang ditugaskan untuk dikerjakan</p>
+  <p class="text-muted mb-0 small">Kelola dan ajukan project yang sudah selesai untuk direview admin</p>
 </div>
 
     @if(session('success'))
@@ -178,8 +178,8 @@
                                             @if($project->status === 'active')
                                                 <form action="{{ route('lead.projects.submitProject', $project) }}" method="POST" style="display: inline;">
                                                     @csrf
-                                                    <button type="submit" class="btn btn-outline-success btn-sm" title="Tandai Selesai" onclick="return confirm('Tandai project ini sebagai selesai?')">
-                                                        <i class="bi bi-check-circle"></i>
+                                                    <button type="submit" class="btn btn-outline-warning btn-sm" title="Ajukan Project" onclick="return confirm('Ajukan project ini untuk direview admin?')">
+                                                        <i class="bi bi-send-check"></i>
                                                     </button>
                                                 </form>
                                             @endif
