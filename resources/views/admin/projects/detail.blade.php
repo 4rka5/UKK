@@ -98,24 +98,27 @@
             </div>
 
             @if($project->status === 'pending')
-                <!-- Approval Actions -->
+                <!-- Verification Actions -->
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white">
-                        <h5 class="mb-0"><i class="bi bi-check2-square"></i> Review Project</h5>
+                        <h5 class="mb-0"><i class="bi bi-check2-square\"></i> Verifikasi Project Selesai</h5>
                     </div>
                     <div class="card-body">
+                        <p class="text-muted mb-3">
+                            <i class="bi bi-info-circle"></i> Team lead mengajukan project ini sebagai selesai. Verifikasi apakah project benar-benar sudah selesai atau perlu perbaikan.
+                        </p>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <form action="{{ route('admin.projects.approve', $project) }}" method="POST">
+                                <form action="{{ route('admin.projects.markCompleted', $project) }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="btn btn-success w-100" onclick="return confirm('Approve project ini?')">
-                                        <i class="bi bi-check-circle"></i> Approve Project
+                                    <button type="submit" class="btn btn-success w-100" onclick="return confirm('Tandai project ini sebagai selesai? Team lead akan kembali idle.')">
+                                        <i class="bi bi-check-circle"></i> Tandai Selesai
                                     </button>
                                 </form>
                             </div>
                             <div class="col-md-6">
-                                <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                                    <i class="bi bi-x-circle"></i> Reject Project
+                                <button type="button" class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Minta Perbaikan
                                 </button>
                             </div>
                         </div>
@@ -176,35 +179,35 @@
     </div>
 </div>
 
-<!-- Reject Modal -->
+<!-- Reject Completion Modal -->
 <div class="modal fade" id="rejectModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ route('admin.projects.reject', $project) }}" method="POST">
+            <form action="{{ route('admin.projects.rejectCompletion', $project) }}" method="POST">
                 @csrf
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title"><i class="bi bi-x-circle"></i> Reject Project</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title"><i class="bi bi-arrow-counterclockwise"></i> Minta Perbaikan Project</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-warning">
-                        <i class="bi bi-exclamation-triangle"></i> Anda akan menolak project: <strong>{{ $project->project_name }}</strong>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Anda akan meminta team lead untuk memperbaiki project: <strong>{{ $project->project_name }}</strong>
                     </div>
                     <div class="mb-3">
-                        <label for="rejection_reason" class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
+                        <label for="rejection_reason" class="form-label">Feedback / Alasan Perbaikan <span class="text-danger">*</span></label>
                         <textarea class="form-control" 
                                   id="rejection_reason" 
                                   name="rejection_reason" 
                                   rows="4" 
-                                  placeholder="Jelaskan alasan penolakan agar team lead dapat memperbaiki..."
+                                  placeholder="Jelaskan apa yang perlu diperbaiki..."
                                   required></textarea>
-                        <small class="text-muted">Team lead akan melihat alasan ini dan dapat memperbaiki project.</small>
+                        <small class="text-muted">Team lead akan melihat feedback ini dan melanjutkan project.</small>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-x-circle"></i> Reject Project
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-arrow-counterclockwise"></i> Kirim Feedback
                     </button>
                 </div>
             </form>

@@ -30,8 +30,9 @@ Route::middleware(['auth','role:admin'])->prefix('admin')->name('admin.')->group
     
     // Project approval routes
     Route::get('projects/{project}/detail', [ProjectController::class, 'detail'])->name('projects.detail');
+    Route::post('projects/{project}/mark-completed', [ProjectController::class, 'markAsCompleted'])->name('projects.markCompleted');
+    Route::post('projects/{project}/reject-completion', [ProjectController::class, 'rejectCompletion'])->name('projects.rejectCompletion');
     Route::post('projects/{project}/approve', [ProjectController::class, 'approve'])->name('projects.approve');
-    Route::post('projects/{project}/reject', [ProjectController::class, 'reject'])->name('projects.reject');
     
     // Project members management
     Route::get('projects/{project}/members', [ProjectController::class, 'members'])->name('projects.members');
@@ -52,11 +53,10 @@ Route::middleware(['auth','role:admin'])->prefix('admin')->name('admin.')->group
 Route::middleware(['auth','role:team_lead'])->prefix('lead')->name('lead.')->group(function () {
     Route::get('/', [LeadDashboardController::class, 'index'])->name('dashboard');
     
-    // Project management for team lead (only view and create/submit)
+    // Project management for team lead (only view and submit completion)
     Route::get('projects', [LeadProjectController::class, 'index'])->name('projects.index');
-    Route::get('projects/create', [LeadProjectController::class, 'create'])->name('projects.create');
-    Route::post('projects', [LeadProjectController::class, 'store'])->name('projects.store');
     Route::get('projects/{project}/detail', [LeadProjectController::class, 'show'])->name('projects.show');
+    Route::post('projects/{project}/submit-completion', [LeadProjectController::class, 'submitCompletion'])->name('projects.submitCompletion');
     
     // Card management
     Route::resource('cards', LeadCardController::class)->except(['show']);

@@ -12,10 +12,11 @@ use Illuminate\Support\Facades\Auth;
 class ProjectController extends Controller
 {
     /**
-     * Display a listing of the projects created by team lead
+     * Display a listing of the projects assigned to team lead
      */
     public function index()
     {
+        // Team lead hanya bisa lihat project yang ditugaskan kepadanya
         $projects = Project::where('created_by', Auth::id())
             ->with(['owner', 'reviewer'])
             ->orderBy('created_at', 'desc')
@@ -26,37 +27,32 @@ class ProjectController extends Controller
             'total' => Project::where('created_by', Auth::id())->count(),
             'pending' => Project::where('created_by', Auth::id())->where('status', 'pending')->count(),
             'approved' => Project::where('created_by', Auth::id())->where('status', 'approved')->count(),
-            'rejected' => Project::where('created_by', Auth::id())->where('status', 'rejected')->count(),
+            'active' => Project::where('created_by', Auth::id())->where('status', 'active')->count(),
         ];
 
         return view('lead.projects.index', compact('projects', 'stats'));
     }
 
     /**
-     * Show the form for creating a new project (request approval)
+     * Submit project as completed (request admin to mark as done)
      */
-    public function create()
+    public function submitCompletion(Project $project)
     {
-        return view('lead.projects.create');
-    }
+        // Check if user is the owner
+        if ($project->created_by !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
 
-    /**
-     * Store and submit project for approval (no draft, directly pending)
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'project_name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'deadline' => 'required|date|after:today',
-        ]);
+        // Can only submit if status is approved or active
+        if (!in_array($project->status, ['approved', 'active'])) {
+            return redirect()->back()
+                ->with('error', 'Hanya project dengan status approved atau active yang dapat diajukan sebagai selesai.');
+        }
 
-        $project = Project::create([
-            'project_name' => $validated['project_name'],
-            'description' => $validated['description'],
-            'deadline' => $validated['deadline'],
-            'created_by' => Auth::id(),
-            'status' => 'pending', // Langsung pending, tidak ada draft
+        $project->update([
+            'status' => 'pending',
+            'reviewed_by' => null,
+            'reviewed_at' => null,
         ]);
 
         // Send notification to all admins
@@ -64,9 +60,9 @@ class ProjectController extends Controller
         foreach ($admins as $admin) {
             Notification::create([
                 'user_id' => $admin->id,
-                'type' => 'project_submitted',
-                'title' => 'Project Baru Menunggu Approval',
-                'message' => Auth::user()->name . ' mengajukan project "' . $project->project_name . '" untuk approval.',
+                'type' => 'project_completion_submitted',
+                'title' => 'Project Selesai - Menunggu Verifikasi',
+                'message' => Auth::user()->name . ' mengajukan project "' . $project->project_name . '" sebagai selesai.',
                 'related_type' => 'Project',
                 'related_id' => $project->id,
                 'is_read' => false,
@@ -74,7 +70,7 @@ class ProjectController extends Controller
         }
 
         return redirect()->route('lead.projects.index')
-            ->with('success', 'Project berhasil diajukan untuk approval.');
+            ->with('success', 'Project berhasil diajukan sebagai selesai. Menunggu verifikasi admin.');
     }
 
 

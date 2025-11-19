@@ -6,12 +6,9 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h3 mb-0"><i class="bi bi-send"></i> Ajukan Project</h1>
-            <p class="text-muted mb-0">Ajukan project baru untuk mendapatkan persetujuan admin</p>
+            <h1 class="h3 mb-0"><i class="bi bi-clipboard-check"></i> Project Saya</h1>
+            <p class="text-muted mb-0">Kelola dan ajukan project yang ditugaskan sebagai selesai</p>
         </div>
-        <a href="{{ route('lead.projects.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Ajukan Project Baru
-        </a>
     </div>
 
     @if(session('success'))
@@ -40,7 +37,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted mb-1 small">Total Pengajuan</h6>
+                            <h6 class="text-muted mb-1 small">Total Project</h6>
                             <h4 class="mb-0">{{ $stats['total'] }}</h4>
                         </div>
                     </div>
@@ -86,13 +83,13 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
-                            <div class="bg-danger bg-opacity-10 text-danger rounded-circle p-3">
-                                <i class="bi bi-x-circle fs-4"></i>
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3">
+                                <i class="bi bi-play-circle fs-4"></i>
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted mb-1 small">Rejected</h6>
-                            <h4 class="mb-0">{{ $stats['rejected'] }}</h4>
+                            <h6 class="text-muted mb-1 small">Active</h6>
+                            <h4 class="mb-0">{{ $stats['active'] }}</h4>
                         </div>
                     </div>
                 </div>
@@ -134,11 +131,13 @@
                                     </td>
                                     <td class="text-center">
                                         @if($project->status === 'pending')
-                                            <span class="badge bg-warning"><i class="bi bi-clock-history"></i> Pending</span>
+                                            <span class="badge bg-warning"><i class="bi bi-clock-history"></i> Menunggu Verifikasi</span>
+                                        @elseif($project->status === 'active')
+                                            <span class="badge bg-primary"><i class="bi bi-play-circle"></i> Aktif</span>
                                         @elseif($project->status === 'approved')
-                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Approved</span>
-                                        @elseif($project->status === 'rejected')
-                                            <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Rejected</span>
+                                            <span class="badge bg-info"><i class="bi bi-check"></i> Approved</span>
+                                        @elseif($project->status === 'completed')
+                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Selesai</span>
                                         @endif
                                     </td>
                                     <td>
@@ -156,15 +155,26 @@
                                         @endif
                                     </td>
                                     <td class="text-center">
-                                        <a href="{{ route('lead.projects.show', $project) }}" class="btn btn-sm btn-outline-info" title="Lihat Detail">
-                                            <i class="bi bi-eye"></i> Detail
-                                        </a>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ route('lead.projects.show', $project) }}" class="btn btn-outline-info" title="Lihat Detail">
+                                                <i class="bi bi-eye"></i> Detail
+                                            </a>
+                                            
+                                            @if(in_array($project->status, ['active', 'approved']))
+                                                <form action="{{ route('lead.projects.submitCompletion', $project) }}" method="POST" style="display: inline;">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-outline-success" title="Ajukan Selesai" onclick="return confirm('Ajukan project ini sebagai selesai?')">
+                                                        <i class="bi bi-send-check"></i> Selesai
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
-                                @if($project->status === 'rejected' && $project->rejection_reason)
+                                @if($project->status === 'active' && $project->rejection_reason)
                                     <tr class="table-warning">
                                         <td colspan="6">
-                                            <small><strong><i class="bi bi-exclamation-triangle"></i> Alasan Penolakan:</strong> {{ $project->rejection_reason }}</small>
+                                            <small><strong><i class="bi bi-exclamation-triangle"></i> Feedback Admin:</strong> {{ $project->rejection_reason }}</small>
                                         </td>
                                     </tr>
                                 @endif
@@ -175,10 +185,8 @@
             @else
                 <div class="text-center py-5">
                     <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
-                    <p class="text-muted mt-3">Belum ada pengajuan project. Ajukan project baru untuk memulai.</p>
-                    <a href="{{ route('lead.projects.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Ajukan Project Baru
-                    </a>
+                    <p class="text-muted mt-3">Belum ada project yang ditugaskan kepada Anda.</p>
+                    <p class="text-muted small">Hubungi admin untuk mendapatkan project baru.</p>
                 </div>
             @endif
         </div>

@@ -12,7 +12,7 @@
             <i class="bi bi-speedometer2"></i> Dashboard
           </a>
           <a href="{{ route('lead.projects.index') }}" class="list-group-item list-group-item-action {{ request()->is('lead/projects*') ? 'active' : '' }}">
-            <i class="bi bi-send"></i> Ajukan Project
+            <i class="bi bi-clipboard-check"></i> Project Saya
           </a>
           <a href="{{ url('/lead/cards') }}" class="list-group-item list-group-item-action {{ request()->is('lead/cards*') ? 'active' : '' }}">
             <i class="bi bi-kanban"></i> Kelola Cards

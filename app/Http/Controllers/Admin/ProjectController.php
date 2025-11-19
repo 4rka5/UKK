@@ -332,41 +332,46 @@ class ProjectController extends Controller
     }
 
     /**
-     * Approve project submission from team lead
+     * Mark project as completed (from team lead submission)
      */
-    public function approve(Project $project)
+    public function markAsCompleted(Project $project)
     {
         if ($project->status !== 'pending') {
             return redirect()->back()
-                ->with('error', 'Hanya project dengan status pending yang dapat diapprove.');
+                ->with('error', 'Hanya project dengan status pending yang dapat ditandai sebagai selesai.');
         }
 
         $project->update([
-            'status' => 'approved',
+            'status' => 'completed',
             'reviewed_by' => auth()->id(),
             'reviewed_at' => now(),
-            'rejection_reason' => null,
         ]);
 
-        // Send notification to project owner (team lead)
+        // Update status team lead menjadi idle
+        $teamLead = $project->owner;
+        if ($teamLead) {
+            $teamLead->update(['status' => 'idle']);
+        }
+
+        // Send notification to team lead
         \App\Models\Notification::create([
             'user_id' => $project->created_by,
-            'type' => 'project_approved',
-            'title' => 'Project Disetujui',
-            'message' => 'Project "' . $project->project_name . '" telah disetujui oleh admin.',
+            'type' => 'project_completed',
+            'title' => 'Project Selesai - Status Idle',
+            'message' => 'Project "' . $project->project_name . '" telah ditandai selesai. Status Anda kembali idle dan dapat menerima project baru.',
             'related_type' => 'Project',
             'related_id' => $project->id,
             'is_read' => false,
         ]);
 
         return redirect()->back()
-            ->with('success', 'Project berhasil diapprove.');
+            ->with('success', 'Project berhasil ditandai sebagai selesai. Team lead kembali idle.');
     }
 
     /**
-     * Reject project submission from team lead
+     * Reject project completion (ask team lead to continue)
      */
-    public function reject(Request $request, Project $project)
+    public function rejectCompletion(Request $request, Project $project)
     {
         if ($project->status !== 'pending') {
             return redirect()->back()
@@ -378,25 +383,52 @@ class ProjectController extends Controller
         ]);
 
         $project->update([
-            'status' => 'rejected',
+            'status' => 'active', // Kembali ke active
             'reviewed_by' => auth()->id(),
             'reviewed_at' => now(),
             'rejection_reason' => $validated['rejection_reason'],
         ]);
 
-        // Send notification to project owner (team lead)
+        // Send notification to team lead
         \App\Models\Notification::create([
             'user_id' => $project->created_by,
-            'type' => 'project_rejected',
-            'title' => 'Project Ditolak',
-            'message' => 'Project "' . $project->project_name . '" ditolak. Alasan: ' . $validated['rejection_reason'],
+            'type' => 'project_completion_rejected',
+            'title' => 'Project Belum Selesai',
+            'message' => 'Project "' . $project->project_name . '" belum dapat ditandai selesai. Alasan: ' . $validated['rejection_reason'],
             'related_type' => 'Project',
             'related_id' => $project->id,
             'is_read' => false,
         ]);
 
         return redirect()->back()
-            ->with('success', 'Project berhasil direject.');
+            ->with('success', 'Project completion direject. Team lead akan melanjutkan project.');
+    }
+
+    /**
+     * Approve project submission from team lead (activate project)
+     */
+    public function approve(Project $project)
+    {
+        // Approve hanya untuk project baru yang diajukan admin (bukan dari team lead completion)
+        // Karena team lead tidak bisa create project, method ini untuk admin create project
+        
+        $project->update([
+            'status' => 'active',
+            'reviewed_by' => auth()->id(),
+            'reviewed_at' => now(),
+        ]);
+
+        return redirect()->back()
+            ->with('success', 'Project berhasil diaktifkan.');
+    }
+
+    /**
+     * Reject project submission from team lead
+     */
+    public function reject(Request $request, Project $project)
+    {
+        // Method ini tidak dipakai lagi karena approve/reject diganti dengan markAsCompleted/rejectCompletion
+        return redirect()->back()->with('error', 'Method deprecated.');
     }
 
     /**
