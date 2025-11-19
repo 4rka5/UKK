@@ -317,6 +317,7 @@ function getNotificationIcon(type) {
         'comment_added': '💬',
         'status_changed': '🔄',
         'project_update': '📁',
+        'project_submitted': '📤',
         'extension_request': '📝',
         'blocker_reported': '🚧',
         'default': '🔔'
@@ -333,6 +334,7 @@ function getNotificationColor(type) {
         'comment_added': 'bg-info text-white',
         'status_changed': 'bg-secondary text-white',
         'project_update': 'bg-dark text-white',
+        'project_submitted': 'bg-warning text-dark',
         'extension_request': 'bg-warning text-dark',
         'blocker_reported': 'bg-danger text-white',
         'default': 'bg-light text-dark'

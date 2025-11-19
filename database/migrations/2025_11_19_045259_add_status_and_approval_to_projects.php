@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('projects', function (Blueprint $table) {
-            $table->enum('status', ['draft', 'pending', 'approved', 'rejected', 'active', 'completed'])->default('draft')->after('deadline');
+            $table->enum('status', ['approved', 'active'])->default('approved')->after('deadline');
             $table->unsignedBigInteger('reviewed_by')->nullable()->after('status');
             $table->timestamp('reviewed_at')->nullable()->after('reviewed_by');
             $table->text('rejection_reason')->nullable()->after('reviewed_at');

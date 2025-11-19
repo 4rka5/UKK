@@ -22,10 +22,8 @@ class ProjectController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        // Statistics
+        // Statistics - hanya 2 status
         $stats = [
-            'total' => Project::where('created_by', Auth::id())->count(),
-            'pending' => Project::where('created_by', Auth::id())->where('status', 'pending')->count(),
             'approved' => Project::where('created_by', Auth::id())->where('status', 'approved')->count(),
             'active' => Project::where('created_by', Auth::id())->where('status', 'active')->count(),
         ];
@@ -34,25 +32,24 @@ class ProjectController extends Controller
     }
 
     /**
-     * Submit project as completed (request admin to mark as done)
+     * Submit project to admin for review (change from approved to active)
      */
-    public function submitCompletion(Project $project)
+    public function submitProject(Project $project)
     {
         // Check if user is the owner
         if ($project->created_by !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
 
-        // Can only submit if status is approved or active
-        if (!in_array($project->status, ['approved', 'active'])) {
+        // Can only submit if status is approved
+        if ($project->status !== 'approved') {
             return redirect()->back()
-                ->with('error', 'Hanya project dengan status approved atau active yang dapat diajukan sebagai selesai.');
+                ->with('error', 'Hanya project dengan status "Disetujui" yang dapat diajukan.');
         }
 
         $project->update([
-            'status' => 'pending',
-            'reviewed_by' => null,
-            'reviewed_at' => null,
+            'status' => 'active',
+            'reviewed_at' => now(),
         ]);
 
         // Send notification to all admins
@@ -60,9 +57,9 @@ class ProjectController extends Controller
         foreach ($admins as $admin) {
             Notification::create([
                 'user_id' => $admin->id,
-                'type' => 'project_completion_submitted',
-                'title' => 'Project Selesai - Menunggu Verifikasi',
-                'message' => Auth::user()->name . ' mengajukan project "' . $project->project_name . '" sebagai selesai.',
+                'type' => 'project_submitted',
+                'title' => 'Project Diajukan oleh Team Lead',
+                'message' => Auth::user()->fullname . ' mengajukan project "' . $project->project_name . '" untuk ditinjau.',
                 'related_type' => 'Project',
                 'related_id' => $project->id,
                 'is_read' => false,
@@ -70,7 +67,7 @@ class ProjectController extends Controller
         }
 
         return redirect()->route('lead.projects.index')
-            ->with('success', 'Project berhasil diajukan sebagai selesai. Menunggu verifikasi admin.');
+            ->with('success', 'Project berhasil diajukan kepada admin.');
     }
 
 

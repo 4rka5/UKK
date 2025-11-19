@@ -14,8 +14,11 @@
           <a href="{{ route('admin.users.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/users*') ? 'active' : '' }}">
             Users
           </a>
-          <a href="{{ route('admin.projects.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/projects*') ? 'active' : '' }}">
+          <a href="{{ route('admin.projects.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('admin.projects.index') || request()->routeIs('admin.projects.create') || request()->routeIs('admin.projects.edit') || request()->routeIs('admin.projects.members') || request()->routeIs('admin.projects.report') ? 'active' : '' }}">
             Projects
+          </a>
+          <a href="{{ route('admin.projects.submitted') }}" class="list-group-item list-group-item-action {{ request()->routeIs('admin.projects.submitted') ? 'active' : '' }}">
+            Project Diajukan
           </a>
           <a href="{{ route('admin.reports.index') }}" class="list-group-item list-group-item-action {{ request()->is('admin/reports*') ? 'active' : '' }}">
             Laporan

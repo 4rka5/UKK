@@ -154,54 +154,30 @@
 
 <!-- Statistics Cards -->
 <div class="row g-3 mb-4">
-  <div class="col-6 col-lg-3">
-    <div class="stat-card bg-white">
-      <div class="d-flex align-items-center gap-3">
-        <div class="stat-icon bg-primary bg-opacity-10 text-primary">
-          <i class="bi bi-folder-fill"></i>
-        </div>
-        <div>
-          <div class="text-muted small">Total Project</div>
-          <div class="h4 mb-0 fw-bold">{{ $totalProjects }}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col-6 col-lg-3">
-    <div class="stat-card bg-white">
-      <div class="d-flex align-items-center gap-3">
-        <div class="stat-icon bg-info bg-opacity-10 text-info">
-          <i class="bi bi-hourglass-split"></i>
-        </div>
-        <div>
-          <div class="text-muted small">Aktif</div>
-          <div class="h4 mb-0 fw-bold">{{ $activeProjects }}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col-6 col-lg-3">
+  <div class="col-6">
     <div class="stat-card bg-white">
       <div class="d-flex align-items-center gap-3">
         <div class="stat-icon bg-success bg-opacity-10 text-success">
           <i class="bi bi-check-circle-fill"></i>
         </div>
         <div>
-          <div class="text-muted small">Selesai</div>
-          <div class="h4 mb-0 fw-bold">{{ $completedProjects }}</div>
+          <div class="text-muted small">Disetujui</div>
+          <div class="h4 mb-0 fw-bold">{{ $stats['approved'] }}</div>
+          <small class="text-muted">Belum diajukan</small>
         </div>
       </div>
     </div>
   </div>
-  <div class="col-6 col-lg-3">
+  <div class="col-6">
     <div class="stat-card bg-white">
       <div class="d-flex align-items-center gap-3">
-        <div class="stat-icon bg-danger bg-opacity-10 text-danger">
-          <i class="bi bi-exclamation-triangle-fill"></i>
+        <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+          <i class="bi bi-play-circle-fill"></i>
         </div>
         <div>
-          <div class="text-muted small">Terlambat</div>
-          <div class="h4 mb-0 fw-bold">{{ $overdueProjects }}</div>
+          <div class="text-muted small">Aktif</div>
+          <div class="h4 mb-0 fw-bold">{{ $stats['active'] }}</div>
+          <small class="text-muted">Sedang dikerjakan</small>
         </div>
       </div>
     </div>

@@ -44,15 +44,7 @@ class Project extends Model
     }
 
     /**
-     * Check if project is pending approval
-     */
-    public function isPending()
-    {
-        return $this->status === 'pending';
-    }
-
-    /**
-     * Check if project is approved
+     * Check if project is approved (disetujui)
      */
     public function isApproved()
     {
@@ -60,10 +52,10 @@ class Project extends Model
     }
 
     /**
-     * Check if project is rejected
+     * Check if project is active (sedang dikerjakan)
      */
-    public function isRejected()
+    public function isActive()
     {
-        return $this->status === 'rejected';
+        return $this->status === 'active';
     }
 }

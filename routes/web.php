@@ -28,6 +28,9 @@ Route::middleware(['auth','role:admin'])->prefix('admin')->name('admin.')->group
     Route::resource('users', UserController::class)->except(['show']);
     Route::resource('projects', ProjectController::class)->except(['show']);
     
+    // Project submitted by team lead
+    Route::get('projects-submitted', [ProjectController::class, 'submitted'])->name('projects.submitted');
+    
     // Project approval routes
     Route::get('projects/{project}/detail', [ProjectController::class, 'detail'])->name('projects.detail');
     Route::post('projects/{project}/mark-completed', [ProjectController::class, 'markAsCompleted'])->name('projects.markCompleted');
@@ -53,10 +56,10 @@ Route::middleware(['auth','role:admin'])->prefix('admin')->name('admin.')->group
 Route::middleware(['auth','role:team_lead'])->prefix('lead')->name('lead.')->group(function () {
     Route::get('/', [LeadDashboardController::class, 'index'])->name('dashboard');
     
-    // Project management for team lead (only view and submit completion)
+    // Project management for team lead (only view and submit)
     Route::get('projects', [LeadProjectController::class, 'index'])->name('projects.index');
     Route::get('projects/{project}/detail', [LeadProjectController::class, 'show'])->name('projects.show');
-    Route::post('projects/{project}/submit-completion', [LeadProjectController::class, 'submitCompletion'])->name('projects.submitCompletion');
+    Route::post('projects/{project}/submit', [LeadProjectController::class, 'submitProject'])->name('projects.submitProject');
     
     // Card management
     Route::resource('cards', LeadCardController::class)->except(['show']);

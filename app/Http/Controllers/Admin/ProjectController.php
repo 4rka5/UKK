@@ -51,16 +51,38 @@ class ProjectController extends Controller
 
         $projects = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
         
-        // Statistics
+        // Statistics - hanya 2 status
         $stats = [
-            'total' => Project::count(),
-            'pending' => Project::where('status', 'pending')->count(),
             'approved' => Project::where('status', 'approved')->count(),
-            'rejected' => Project::where('status', 'rejected')->count(),
             'active' => Project::where('status', 'active')->count(),
         ];
         
         return view('admin.projects.index', compact('projects', 'stats'));
+    }
+
+    /**
+     * Show submitted projects (projects with status 'active')
+     */
+    public function submitted(Request $request)
+    {
+        $query = Project::where('status', 'active')
+            ->with(['owner', 'members']);
+
+        // Search by project name or owner name
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('project_name', 'like', "%{$search}%")
+                  ->orWhereHas('owner', function($ownerQuery) use ($search) {
+                      $ownerQuery->where('fullname', 'like', "%{$search}%")
+                                 ->orWhere('username', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $projects = $query->orderBy('reviewed_at', 'desc')->paginate(10)->withQueryString();
+        
+        return view('admin.projects.submitted', compact('projects'));
     }
 
     public function create()
