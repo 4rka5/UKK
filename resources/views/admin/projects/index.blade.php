@@ -299,10 +299,6 @@
                   </button>
                 </form>
               @endif
-              <a href="{{ route('admin.projects.report', $p) }}" class="btn btn-sm btn-outline-primary" title="Lihat Laporan">
-                <i class="bi bi-file-earmark-text"></i>
-                <span>Laporan</span>
-              </a>
               <a href="{{ route('admin.projects.members', $p) }}" class="btn btn-sm btn-outline-info" title="Kelola Anggota">
                 <i class="bi bi-people-fill"></i>
                 <span class="d-none d-lg-inline">Anggota</span>

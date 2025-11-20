@@ -212,10 +212,6 @@
                     <i class="bi bi-check-circle-fill"></i> Disetujui oleh {{ $project->reviewer->fullname ?? 'Admin' }}
                   </span>
                 @endif
-                <a href="{{ route('admin.projects.report', $project) }}" class="btn btn-sm btn-outline-primary" title="Lihat Laporan">
-                  <i class="bi bi-file-earmark-text"></i>
-                  <span>Laporan</span>
-                </a>
                 <a href="{{ route('admin.projects.members', $project) }}" class="btn btn-sm btn-outline-info" title="Lihat Anggota">
                   <i class="bi bi-people-fill"></i>
                   <span>Anggota</span>
