@@ -57,12 +57,14 @@
                         <div class="col-md-4">
                             <p class="mb-2">
                                 <strong><i class="bi bi-flag"></i> Status:</strong><br>
-                                @if($project->status === 'pending')
-                                    <span class="badge bg-warning"><i class="bi bi-clock-history"></i> Pending</span>
-                                @elseif($project->status === 'approved')
-                                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> Approved</span>
-                                @elseif($project->status === 'rejected')
-                                    <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Rejected</span>
+                                @if($project->status === 'active')
+                                    <span class="badge bg-primary"><i class="bi bi-play-circle"></i> Aktif</span>
+                                @elseif($project->status === 'done')
+                                    @if($project->reviewed_by)
+                                        <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Disetujui</span>
+                                    @else
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-clock-history"></i> Menunggu Review</span>
+                                    @endif
                                 @else
                                     <span class="badge bg-secondary">{{ ucfirst($project->status) }}</span>
                                 @endif
@@ -97,32 +99,32 @@
                 </div>
             </div>
 
-            @if($project->status === 'pending')
-                <!-- Verification Actions -->
+            @if($project->status === 'done' && !$project->reviewed_by)
+                <!-- Approval Actions -->
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white">
-                        <h5 class="mb-0"><i class="bi bi-check2-square\"></i> Verifikasi Project Selesai</h5>
+                        <h5 class="mb-0"><i class="bi bi-check2-square"></i> Review Project</h5>
                     </div>
                     <div class="card-body">
                         <p class="text-muted mb-3">
-                            <i class="bi bi-info-circle"></i> Team lead mengajukan project ini sebagai selesai. Verifikasi apakah project benar-benar sudah selesai atau perlu perbaikan.
+                            <i class="bi bi-info-circle"></i> Team lead mengajukan project ini untuk review. Setujui untuk menandai selesai.
                         </p>
                         <div class="row g-3">
-                            <div class="col-md-6">
-                                <form action="{{ route('admin.projects.markCompleted', $project) }}" method="POST">
+                            <div class="col-12">
+                                <form action="{{ route('admin.projects.approve', $project) }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="btn btn-success w-100" onclick="return confirm('Tandai project ini sebagai selesai? Team lead akan kembali idle.')">
-                                        <i class="bi bi-check-circle"></i> Tandai Selesai
+                                    <button type="submit" class="btn btn-success w-100" onclick="return confirm('Setujui project ini? Semua anggota tim akan menjadi idle dan subtasks menjadi done.')">
+                                        <i class="bi bi-check-circle-fill"></i> Setujui Project
                                     </button>
                                 </form>
                             </div>
-                            <div class="col-md-6">
-                                <button type="button" class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                                    <i class="bi bi-arrow-counterclockwise"></i> Minta Perbaikan
-                                </button>
-                            </div>
                         </div>
                     </div>
+                </div>
+            @elseif($project->status === 'done' && $project->reviewed_by)
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle-fill"></i> <strong>Project Disetujui</strong>
+                    <p class="mb-0 mt-2">Project telah disetujui oleh {{ $project->reviewer->fullname ?? 'Admin' }} pada {{ $project->reviewed_at->format('d M Y H:i') }}</p>
                 </div>
             @endif
         </div>
@@ -143,74 +145,28 @@
                             </div>
                         </div>
                         
-                        @if($project->status === 'pending')
+                        @if($project->status === 'active')
                             <div class="timeline-item">
-                                <div class="timeline-marker bg-warning"></div>
+                                <div class="timeline-marker bg-primary"></div>
                                 <div class="timeline-content">
-                                    <p class="mb-1 small"><strong>Diajukan untuk Review</strong></p>
-                                    <p class="mb-0 text-muted small">{{ $project->updated_at->format('d M Y H:i') }}</p>
+                                    <p class="mb-1 small"><strong>Project Aktif</strong></p>
+                                    <p class="mb-0 text-muted small">Sedang dikerjakan...</p>
                                 </div>
                             </div>
                         @endif
 
-                        @if($project->status === 'approved')
+                        @if($project->status === 'done')
                             <div class="timeline-item">
-                                <div class="timeline-marker bg-success"></div>
+                                <div class="timeline-marker bg-{{ $project->reviewed_by ? 'success' : 'warning' }}"></div>
                                 <div class="timeline-content">
-                                    <p class="mb-1 small"><strong>Disetujui</strong></p>
-                                    <p class="mb-0 text-muted small">{{ $project->reviewed_at->format('d M Y H:i') }}</p>
-                                </div>
-                            </div>
-                        @endif
-
-                        @if($project->status === 'rejected')
-                            <div class="timeline-item">
-                                <div class="timeline-marker bg-danger"></div>
-                                <div class="timeline-content">
-                                    <p class="mb-1 small"><strong>Ditolak</strong></p>
-                                    <p class="mb-0 text-muted small">{{ $project->reviewed_at->format('d M Y H:i') }}</p>
+                                    <p class="mb-1 small"><strong>{{ $project->reviewed_by ? 'Disetujui' : 'Menunggu Review' }}</strong></p>
+                                    <p class="mb-0 text-muted small">{{ $project->reviewed_at ? $project->reviewed_at->format('d M Y H:i') : 'Diajukan untuk review' }}</p>
                                 </div>
                             </div>
                         @endif
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Reject Completion Modal -->
-<div class="modal fade" id="rejectModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form action="{{ route('admin.projects.rejectCompletion', $project) }}" method="POST">
-                @csrf
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title"><i class="bi bi-arrow-counterclockwise"></i> Minta Perbaikan Project</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> Anda akan meminta team lead untuk memperbaiki project: <strong>{{ $project->project_name }}</strong>
-                    </div>
-                    <div class="mb-3">
-                        <label for="rejection_reason" class="form-label">Feedback / Alasan Perbaikan <span class="text-danger">*</span></label>
-                        <textarea class="form-control" 
-                                  id="rejection_reason" 
-                                  name="rejection_reason" 
-                                  rows="4" 
-                                  placeholder="Jelaskan apa yang perlu diperbaiki..."
-                                  required></textarea>
-                        <small class="text-muted">Team lead akan melihat feedback ini dan melanjutkan project.</small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-warning">
-                        <i class="bi bi-arrow-counterclockwise"></i> Kirim Feedback
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 </div>

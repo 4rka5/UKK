@@ -77,7 +77,7 @@ class ReportController extends Controller
     
     private function generateProjectReport($startDate, $endDate, $format)
     {
-        $query = Project::with(['owner', 'members']);
+        $query = Project::with(['owner', 'members', 'reviewer']);
         
         if ($startDate && $endDate) {
             $query->whereBetween('created_at', [$startDate, $endDate]);
@@ -91,6 +91,10 @@ class ReportController extends Controller
             'period' => $startDate && $endDate ? "$startDate sampai $endDate" : "Semua Data",
             'projects' => $projects,
             'totalProjects' => $projects->count(),
+            'projectsByStatus' => [
+                'active' => $projects->where('status', 'active')->count(),
+                'done' => $projects->where('status', 'done')->count(),
+            ]
         ];
         
         if ($format === 'pdf') {

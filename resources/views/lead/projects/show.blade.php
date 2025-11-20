@@ -43,14 +43,14 @@
                         <div class="col-md-6">
                             <p class="mb-2">
                                 <strong><i class="bi bi-flag"></i> Status:</strong><br>
-                                @if($project->status === 'pending')
-                                    <span class="badge bg-warning"><i class="bi bi-clock-history"></i> Menunggu Verifikasi</span>
-                                @elseif($project->status === 'active')
+                                @if($project->status === 'active')
                                     <span class="badge bg-primary"><i class="bi bi-play-circle"></i> Aktif</span>
-                                @elseif($project->status === 'approved')
-                                    <span class="badge bg-info"><i class="bi bi-check"></i> Approved</span>
-                                @elseif($project->status === 'completed')
-                                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> Selesai</span>
+                                @elseif($project->status === 'done')
+                                    @if($project->reviewed_by)
+                                        <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Disetujui</span>
+                                    @else
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-clock-history"></i> Menunggu Review</span>
+                                    @endif
                                 @endif
                             </p>
                         </div>
@@ -97,21 +97,13 @@
                     <ul class="timeline">
                         <li class="timeline-item">
                             <div class="timeline-marker bg-secondary"></div>
-                        <div class="timeline-content">
-                            <p class="mb-1 small"><strong>Project Diajukan</strong></p>
-                            <p class="mb-0 text-muted small">{{ $project->created_at->format('d M Y H:i') }}</p>
-                        </div>
-                    </li>                        @if($project->status === 'pending')
-                            <li class="timeline-item">
-                                <div class="timeline-marker bg-warning"></div>
-                                <div class="timeline-content">
-                                    <p class="mb-1 small"><strong>Menunggu Verifikasi</strong></p>
-                                    <p class="mb-0 text-muted small">Sedang diverifikasi admin...</p>
-                                </div>
-                            </li>
-                        @endif
-
-                        @if(in_array($project->status, ['active', 'approved']))
+                            <div class="timeline-content">
+                                <p class="mb-1 small"><strong>Project Dibuat</strong></p>
+                                <p class="mb-0 text-muted small">{{ $project->created_at->format('d M Y H:i') }}</p>
+                            </div>
+                        </li>
+                        
+                        @if($project->status === 'active')
                             <li class="timeline-item">
                                 <div class="timeline-marker bg-primary"></div>
                                 <div class="timeline-content">
@@ -121,12 +113,12 @@
                             </li>
                         @endif
 
-                        @if($project->status === 'completed')
+                        @if($project->status === 'done')
                             <li class="timeline-item">
-                                <div class="timeline-marker bg-success"></div>
+                                <div class="timeline-marker bg-{{ $project->reviewed_by ? 'success' : 'warning' }}"></div>
                                 <div class="timeline-content">
-                                    <p class="mb-1 small"><strong>Selesai</strong></p>
-                                    <p class="mb-0 text-muted small">{{ $project->reviewed_at ? $project->reviewed_at->format('d M Y H:i') : '-' }}</p>
+                                    <p class="mb-1 small"><strong>{{ $project->reviewed_by ? 'Disetujui' : 'Menunggu Review' }}</strong></p>
+                                    <p class="mb-0 text-muted small">{{ $project->reviewed_at ? $project->reviewed_at->format('d M Y H:i') : 'Diajukan untuk review' }}</p>
                                 </div>
                             </li>
                         @endif
@@ -134,30 +126,30 @@
                 </div>
             </div>
 
-            @if($project->status === 'pending')
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> <strong>Status: Menunggu Verifikasi</strong>
-                    <p class="mb-0 mt-2 small">Project Anda sedang diverifikasi oleh admin. Anda akan menerima notifikasi saat project ditandai selesai atau perlu perbaikan.</p>
-                </div>
-            @elseif(in_array($project->status, ['active', 'approved']))
+            @if($project->status === 'active')
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-success text-white">
-                        <h6 class="mb-0"><i class="bi bi-check-circle"></i> Ajukan Project Selesai</h6>
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0"><i class="bi bi-send-check"></i> Ajukan Project</h6>
                     </div>
                     <div class="card-body">
-                        <p class="mb-3">Jika project sudah selesai dikerjakan, ajukan ke admin untuk verifikasi:</p>
-                        <form action="{{ route('lead.projects.submitCompletion', $project) }}" method="POST">
+                        <p class="mb-3">Jika project sudah selesai dikerjakan, ajukan ke admin untuk review:</p>
+                        <form action="{{ route('lead.projects.submitProject', $project) }}" method="POST">
                             @csrf
-                            <button type="submit" class="btn btn-success" onclick="return confirm('Ajukan project ini sebagai selesai?')">
-                                <i class="bi bi-send-check"></i> Ajukan Sebagai Selesai
+                            <button type="submit" class="btn btn-warning" onclick="return confirm('Ajukan project ini untuk direview admin?')">
+                                <i class="bi bi-send-check"></i> Ajukan Project
                             </button>
                         </form>
                     </div>
                 </div>
-            @elseif($project->status === 'completed')
+            @elseif($project->status === 'done' && !$project->reviewed_by)
+                <div class="alert alert-warning">
+                    <i class="bi bi-clock-history"></i> <strong>Menunggu Review Admin</strong>
+                    <p class="mb-0 mt-2 small">Project telah diajukan dan sedang menunggu persetujuan dari admin.</p>
+                </div>
+            @elseif($project->status === 'done' && $project->reviewed_by)
                 <div class="alert alert-success">
-                    <i class="bi bi-check-circle"></i> <strong>Project Selesai</strong>
-                    <p class="mb-0 mt-2 small">Selamat! Project telah selesai. Status Anda kembali idle dan dapat menerima project baru dari admin.</p>
+                    <i class="bi bi-check-circle-fill"></i> <strong>Project Disetujui</strong>
+                    <p class="mb-0 mt-2 small">Selamat! Project telah disetujui oleh {{ $project->reviewer->fullname ?? 'Admin' }}. Status Anda dan semua anggota tim kembali idle.</p>
                 </div>
             @endif
         </div>

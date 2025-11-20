@@ -214,7 +214,7 @@
         <select name="status" class="form-select">
           <option value="">Semua</option>
           <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Aktif</option>
-          <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Selesai</option>
+          <option value="done" {{ request('status') === 'done' ? 'selected' : '' }}>Done</option>
         </select>
       </div>
       <div class="col-12 col-md-2">
