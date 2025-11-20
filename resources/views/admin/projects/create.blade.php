@@ -29,7 +29,7 @@
     <div class="col-md-3">
       <label class="form-label fw-semibold">Deadline</label>
       <input type="date" name="deadline" class="form-control" value="{{ old('deadline') }}">
-      <small class="text-muted">Opsional</small>
+      <small class="text-muted">Wajib di Isi</small>
     </div>
     <div class="col-md-3">
       <label class="form-label fw-semibold">Owner (Team Lead) <span class="text-danger">*</span></label>
