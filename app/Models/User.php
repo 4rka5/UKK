@@ -55,8 +55,8 @@ class User extends Authenticatable
     /**
      * Check if user has any assigned tasks based on their role
      * - Admin: Always returns true (no task check needed)
-     * - Team Lead: Checks if user has created projects (created_by in projects table)
-     * - Members (Designer/Developer): Checks if user has cards assigned (not done status)
+     * - Team Lead: Checks if user has ACTIVE projects (status = 'active')
+     * - Members (Designer/Developer): Checks if user is in ACTIVE projects (via project_members)
      * 
      * @return bool
      */
@@ -67,23 +67,26 @@ class User extends Authenticatable
             return true;
         }
 
-        // Team Lead: cek dari tabel projects berdasarkan created_by
+        // Team Lead: cek dari tabel projects yang AKTIF (status = 'active')
         if ($this->isLead()) {
-            return Project::where('created_by', $this->id)->exists();
+            return Project::where('created_by', $this->id)
+                ->where('status', 'active')
+                ->exists();
         }
 
-        // Members (Designer/Developer): cek dari tabel cards yang belum selesai
-        // Hanya hitung card yang statusnya BUKAN 'done'
-        return $this->assignedCards()
-            ->where('status', '!=', 'done')
+        // Members (Designer/Developer): cek dari project_members untuk project yang AKTIF
+        return $this->projectMemberships()
+            ->whereHas('project', function($query) {
+                $query->where('status', 'active');
+            })
             ->exists();
     }
 
     /**
      * Get count of tasks assigned to user based on their role
      * - Admin: Returns 0
-     * - Team Lead: Count of created projects
-     * - Members: Count of assigned cards (not done)
+     * - Team Lead: Count of ACTIVE projects only (status = 'active')
+     * - Members: Count of ACTIVE project memberships only
      * 
      * @return int
      */
@@ -94,20 +97,25 @@ class User extends Authenticatable
         }
 
         if ($this->isLead()) {
-            return Project::where('created_by', $this->id)->count();
+            // Hanya hitung project yang AKTIF (status = 'active')
+            return Project::where('created_by', $this->id)
+                ->where('status', 'active')
+                ->count();
         }
 
-        // Members: hitung card yang statusnya BUKAN 'done'
-        return $this->assignedCards()
-            ->where('status', '!=', 'done')
+        // Members: hitung project membership yang projectnya AKTIF
+        return $this->projectMemberships()
+            ->whereHas('project', function($query) {
+                $query->where('status', 'active');
+            })
             ->count();
     }
 
     /**
      * Get all tasks assigned to user based on their role
      * - Admin: Returns empty collection
-     * - Team Lead: Returns created projects
-     * - Members: Returns assigned cards (not done)
+     * - Team Lead: Returns ACTIVE projects only
+     * - Members: Returns ACTIVE project memberships
      * 
      * @return \Illuminate\Database\Eloquent\Collection
      */
@@ -118,12 +126,19 @@ class User extends Authenticatable
         }
 
         if ($this->isLead()) {
-            return Project::where('created_by', $this->id)->get();
+            // Hanya return project yang AKTIF
+            return Project::where('created_by', $this->id)
+                ->where('status', 'active')
+                ->get();
         }
 
-        // Members: hanya card yang belum selesai
-        return $this->assignedCards()
-            ->where('status', '!=', 'done')
-            ->get();
+        // Members: return project dari project_members yang AKTIF
+        return $this->projectMemberships()
+            ->with('project')
+            ->whereHas('project', function($query) {
+                $query->where('status', 'active');
+            })
+            ->get()
+            ->pluck('project');
     }
 }

@@ -428,7 +428,7 @@ class ProjectController extends Controller
     }
 
     /**
-     * Approve/Mark project as completed (done stays done, set all members to idle)
+     * Approve/Mark project as completed (done stays done, free all members from project)
      */
     public function approve(Project $project)
     {
@@ -443,14 +443,44 @@ class ProjectController extends Controller
             'reviewed_at' => now(),
         ]);
 
-        // Set semua member project (termasuk team lead) menjadi idle
+        // Get all project members before deletion
         $projectMembers = \App\Models\ProjectMember::where('project_id', $project->id)->get();
-        foreach ($projectMembers as $member) {
-            $user = User::find($member->user_id);
+        $memberIds = $projectMembers->pluck('user_id')->toArray();
+        
+        // Set semua member project (termasuk team lead) menjadi idle
+        // Cek apakah masih ada project AKTIF lain
+        foreach ($memberIds as $userId) {
+            $user = User::find($userId);
             if ($user) {
-                $user->update(['status' => 'idle']);
+                // Cek apakah user masih punya project aktif lain
+                $hasOtherActiveProjects = false;
+                
+                if ($user->isLead()) {
+                    // Team lead: cek project yang dibuat (kecuali project ini)
+                    $hasOtherActiveProjects = Project::where('created_by', $userId)
+                        ->where('status', 'active')
+                        ->where('id', '!=', $project->id)
+                        ->exists();
+                } else {
+                    // Member: cek membership di project aktif lain (kecuali project ini)
+                    $hasOtherActiveProjects = \App\Models\ProjectMember::where('user_id', $userId)
+                        ->where('project_id', '!=', $project->id)
+                        ->whereHas('project', function($q) {
+                            $q->where('status', 'active');
+                        })
+                        ->exists();
+                }
+                
+                // Jika tidak ada project aktif lain, set status idle
+                if (!$hasOtherActiveProjects) {
+                    $user->update(['status' => 'idle']);
+                }
             }
         }
+
+        // HAPUS semua project members - bebaskan dari project
+        // Ini membuat mereka tersedia untuk project baru
+        \App\Models\ProjectMember::where('project_id', $project->id)->delete();
 
         // Set semua subtasks dari cards project ini menjadi done
         $cards = \App\Models\ManagementProjectCard::where('project_id', $project->id)->get();
@@ -463,8 +493,8 @@ class ProjectController extends Controller
         \App\Models\Notification::create([
             'user_id' => $project->created_by,
             'type' => 'project_approved',
-            'title' => 'Project Disetujui - Status Idle',
-            'message' => 'Project "' . $project->project_name . '" telah disetujui oleh admin. Status Anda dan semua anggota tim kembali idle.',
+            'title' => 'Project Disetujui - Anda Bebas Tugas',
+            'message' => 'Project "' . $project->project_name . '" telah disetujui oleh admin. Anda dan semua anggota tim telah dibebaskan dan dapat menerima project baru.',
             'related_type' => 'Project',
             'related_id' => $project->id,
             'is_read' => false,
@@ -476,8 +506,8 @@ class ProjectController extends Controller
                 \App\Models\Notification::create([
                     'user_id' => $member->user_id,
                     'type' => 'project_approved',
-                    'title' => 'Project Selesai - Status Idle',
-                    'message' => 'Project "' . $project->project_name . '" telah selesai dan disetujui admin. Status Anda kembali idle dan semua tugas telah diselesaikan.',
+                    'title' => 'Project Selesai - Anda Bebas Tugas',
+                    'message' => 'Project "' . $project->project_name . '" telah selesai dan disetujui admin. Anda telah dibebaskan dari project ini dan dapat menerima tugas baru.',
                     'related_type' => 'Project',
                     'related_id' => $project->id,
                     'is_read' => false,
@@ -486,7 +516,7 @@ class ProjectController extends Controller
         }
 
         return redirect()->back()
-            ->with('success', 'Project berhasil disetujui. Semua anggota tim sekarang idle dan semua subtasks diselesaikan.');
+            ->with('success', 'Project berhasil disetujui. Semua anggota tim telah dibebaskan dan tersedia untuk project baru.');
     }
 
     /**

@@ -31,20 +31,22 @@ class UserController extends Controller
         // Filter by task status
         if ($request->filled('has_tasks')) {
             if ($request->has_tasks === '1') {
-                // Users with tasks
+                // Users with ACTIVE tasks/projects
                 $query->where(function($q) {
-                    $q->whereHas('assignedCards', function($cardQuery) {
-                        $cardQuery->where('status', '!=', 'done');
+                    $q->whereHas('projectMemberships', function($memberQuery) {
+                        $memberQuery->whereHas('project', function($projectQuery) {
+                            $projectQuery->where('status', 'active');
+                        });
                     })
-                    ->orWhereHas('projectMemberships')
                     ->orWhere('role', 'admin');
                 });
             } else {
-                // Users without tasks (available)
-                $query->whereDoesntHave('assignedCards', function($cardQuery) {
-                    $cardQuery->where('status', '!=', 'done');
+                // Users without ACTIVE tasks (available)
+                $query->whereDoesntHave('projectMemberships', function($memberQuery) {
+                    $memberQuery->whereHas('project', function($projectQuery) {
+                        $projectQuery->where('status', 'active');
+                    });
                 })
-                ->whereDoesntHave('projectMemberships')
                 ->where('role', '!=', 'admin');
             }
         }

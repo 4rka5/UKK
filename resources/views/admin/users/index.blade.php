@@ -299,8 +299,11 @@
                 <i class="bi bi-gear-fill me-1"></i>{{ ucfirst($u->status) }}
               </span>
             @elseif($u->hasTasks())
+              @php
+                $activeProjectCount = $u->getTasksCount();
+              @endphp
               <span class="badge bg-warning text-dark">
-                <i class="bi bi-briefcase-fill me-1"></i>{{ $u->getTasksCount() }} Tugas
+                <i class="bi bi-briefcase-fill me-1"></i>{{ $activeProjectCount }} Project Aktif
               </span>
             @else
               <span class="badge bg-success">
