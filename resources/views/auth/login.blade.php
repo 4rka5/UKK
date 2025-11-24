@@ -60,6 +60,7 @@
             @error('password')
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
+            <small>Forgot Password <a href="{{url('')}}"></small>
           </div>
 
           <div class="d-grid gap-2">

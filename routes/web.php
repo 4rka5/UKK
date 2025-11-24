@@ -27,27 +27,27 @@ Route::middleware(['auth','role:admin'])->prefix('admin')->name('admin.')->group
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('users', UserController::class)->except(['show']);
     Route::resource('projects', ProjectController::class)->except(['show']);
-    
+
     // Project submitted by team lead
     Route::get('projects-submitted', [ProjectController::class, 'submitted'])->name('projects.submitted');
-    
+
     // Project approval routes
     Route::get('projects/{project}/detail', [ProjectController::class, 'detail'])->name('projects.detail');
     Route::post('projects/{project}/mark-completed', [ProjectController::class, 'markAsCompleted'])->name('projects.markCompleted');
     Route::post('projects/{project}/reject-completion', [ProjectController::class, 'rejectCompletion'])->name('projects.rejectCompletion');
     Route::post('projects/{project}/approve', [ProjectController::class, 'approve'])->name('projects.approve');
-    
+
     // Project members management
     Route::get('projects/{project}/members', [ProjectController::class, 'members'])->name('projects.members');
     Route::post('projects/{project}/members', [ProjectController::class, 'addMember'])->name('projects.addMember');
     Route::delete('projects/{project}/members/{member}', [ProjectController::class, 'removeMember'])->name('projects.removeMember');
-    
+
     // Project report
     Route::get('projects/{project}/report', [ProjectController::class, 'generateReport'])->name('projects.report');
-    
+
     // Admin override rules (jika diperlukan)
     Route::post('override/{resourceType}/{resourceId}', [ProjectController::class, 'overrideRule'])->name('override.rule');
-    
+
     // Reports
     Route::get('reports', [\App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
     Route::post('reports/generate', [\App\Http\Controllers\Admin\ReportController::class, 'generate'])->name('reports.generate');
@@ -55,25 +55,25 @@ Route::middleware(['auth','role:admin'])->prefix('admin')->name('admin.')->group
 
 Route::middleware(['auth','role:team_lead'])->prefix('lead')->name('lead.')->group(function () {
     Route::get('/', [LeadDashboardController::class, 'index'])->name('dashboard');
-    
+
     // Project management for team lead (only view and submit)
     Route::get('projects', [LeadProjectController::class, 'index'])->name('projects.index');
     Route::get('projects/{project}/detail', [LeadProjectController::class, 'show'])->name('projects.show');
     Route::post('projects/{project}/submit', [LeadProjectController::class, 'submitProject'])->name('projects.submitProject');
-    
+
     // Card management
     Route::resource('cards', LeadCardController::class)->except(['show']);
     Route::patch('cards/{card}/move', [LeadCardController::class, 'move'])->name('cards.move');
-    
+
     // Card detail, approve, reject
     Route::get('cards/{card}/detail', [LeadCardController::class, 'detail'])->name('cards.detail');
     Route::post('cards/{card}/approve', [LeadCardController::class, 'approve'])->name('cards.approve');
     Route::post('cards/{card}/reject', [LeadCardController::class, 'reject'])->name('cards.reject');
-    
+
     // Extension approval
     Route::post('cards/{card}/extension/approve', [LeadCardController::class, 'approveExtension'])->name('cards.extension.approve');
     Route::post('cards/{card}/extension/reject', [LeadCardController::class, 'rejectExtension'])->name('cards.extension.reject');
-    
+
     // Comments
     Route::post('cards/{card}/comment', [LeadCardController::class, 'addComment'])->name('cards.comment');
 });
@@ -99,23 +99,23 @@ Route::middleware(['auth','role:designer'])->prefix('designer')->name('designer.
 Route::middleware(['auth','role:designer,developer,team_lead,admin'])->prefix('member')->name('member.')->group(function () {
     Route::get('/', [MemberDashboardController::class, 'index'])->name('dashboard');
     Route::get('/cards/{card}', [MemberCardController::class, 'show'])->name('cards.show');
-    
+
     // Subtasks index - view all my subtasks
     Route::get('/subtasks', [MemberCardController::class, 'subtasksIndex'])->name('subtasks.index');
     // Route update status dihapus - member tidak bisa ubah status card
-    
+
     // Timer routes
     Route::post('/cards/{card}/timer/start', [MemberCardController::class, 'startTimer'])->name('cards.timer.start');
     Route::post('/cards/{card}/timer/pause', [MemberCardController::class, 'pauseTimer'])->name('cards.timer.pause');
     Route::post('/cards/{card}/timer/stop', [MemberCardController::class, 'stopTimer'])->name('cards.timer.stop');
     Route::get('/cards/{card}/timer/status', [MemberCardController::class, 'getTimerStatus'])->name('cards.timer.status');
-    
+
     // Extension request
     Route::post('/cards/{card}/request-extension', [MemberCardController::class, 'requestExtension'])->name('cards.request-extension');
-    
+
     // Comments
     Route::post('/cards/{card}/comment', [MemberCardController::class, 'addComment'])->name('cards.comment');
-    
+
     // Subtasks - member can add, update, and delete subtasks
     Route::post('/cards/{card}/subtask', [MemberCardController::class, 'addSubtask'])->name('cards.subtask.add');
     Route::patch('/subtasks/{subtask}', [MemberCardController::class, 'updateSubtask'])->name('subtasks.update');
@@ -138,9 +138,9 @@ Route::get('/', function () {
     if (!Auth::check()) {
         return redirect('/login');
     }
-    
+
     $role = Auth::user()->role;
-    
+
     return match($role) {
         'admin' => redirect('/admin'),
         'team_lead' => redirect('/lead'),
